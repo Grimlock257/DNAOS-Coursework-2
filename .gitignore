@@ -8,6 +8,6 @@ Server/Server.iml
 Server/bin/
 Server/src/META-INF/
 
-Client/Node.iml
+Client/Client.iml
 Client/bin/
 Client/src/META-INF/
