@@ -1,0 +1,13 @@
+.idea/
+
+Node/Node.iml
+Node/bin/
+Node/src/META-INF/
+
+Server/Server.iml
+Server/bin/
+Server/src/META-INF/
+
+Client/Node.iml
+Client/bin/
+Client/src/META-INF/
