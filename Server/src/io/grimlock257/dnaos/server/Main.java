@@ -9,6 +9,12 @@ package io.grimlock257.dnaos.server;
  */
 public class Main {
     public static void main(String[] args) {
-        System.out.println("I am server");
+        new Main();
+    }
+
+    public Main() {
+        System.out.println("[INFO] LoadBalancer online");
+
+        new LoadBalancer(4000);
     }
 }
