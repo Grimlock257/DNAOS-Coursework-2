@@ -17,6 +17,8 @@ import java.net.InetAddress;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public class Node {
+    private boolean connected = false;
+
     private int nodePort;
     private String lbHost;
     private int lbPort;
@@ -66,10 +68,41 @@ public class Node {
         InetAddress addr = InetAddress.getByName(lbHost);
 
         while (true) {
-            System.out.print("> ");
-            String message = keyboard.readLine();
+            if (connected) {
+                System.out.print("> ");
+                String message = keyboard.readLine();
 
-            messageManager.send(message, addr, lbPort);
+                messageManager.send(message, addr, lbPort);
+            } else {
+                System.out.println("Connecting to load balancer...");
+                messageManager.send("REGISTER", addr, lbPort);
+            }
+
+            processMessage(messageManager.receive());
+        }
+    }
+
+    public void processMessage(String message) throws IOException {
+        // System.out.println("[DEBUG] Received message: " + message);
+        String[] args = message.split(",");
+
+        // These messages are just for testing at the moment
+        switch (getValidArg(args, 0)) {
+            case "CONFIRM":
+                System.out.println("[INFO] processMessage received 'CONFIRM'");
+                connected = true;
+                break;
+            default:
+                System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
+        }
+    }
+
+    // TODO: toUpperCase()?
+    public String getValidArg(String[] args, int pos) {
+        if (args.length > pos) {
+            return (args[pos] != null) ? args[pos].toUpperCase().trim() : "";
+        } else {
+            return "";
         }
     }
 }

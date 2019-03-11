@@ -4,6 +4,7 @@ import io.grimlock257.dnaos.server.managers.MessageManager;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 /**
  * This class represents the load balancer and all it's functionality
@@ -57,8 +58,8 @@ public class LoadBalancer {
     // E.g: REGISTER, 192.168.1.15
     // TODO: Enum or Message packaging containing Message subclasses (i.e MessageRegister, MessageResign etc.)
     // Messages: Node Register, Node Resign, New Job (client -> lb), New Job (lb -> node), Complete job (node -> lb), Complete Job (lb -> client), LB shutdown, Node shutdown
-    public void processMessage(String message) {
-        System.out.println("[DEBUG] Received message: " + message);
+    public void processMessage(String message) throws IOException {
+        // System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
 
         // These messages are just for testing at the moment
@@ -68,6 +69,8 @@ public class LoadBalancer {
                 System.exit(0);
             case "REGISTER":
                 System.out.println("[INFO] processMessage received 'REGISTER'");
+                InetAddress nodeAddr = InetAddress.getByName("localhost");
+                messageManager.send("CONFIRM", nodeAddr, 5000);
                 break;
             default:
                 System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");

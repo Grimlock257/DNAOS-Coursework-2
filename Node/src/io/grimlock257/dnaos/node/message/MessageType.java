@@ -6,5 +6,6 @@ public enum MessageType {
     NEW_JOB,
     COMPLETE_JOB,
     LB_SHUTDOWN,
-    NODE_SHUTDOWN
+    NODE_SHUTDOWN,
+    REGISTER_CONFRIM
 }
