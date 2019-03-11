@@ -1,12 +1,15 @@
 package io.grimlock257.dnaos.server;
 
+import io.grimlock257.dnaos.server.managers.MessageManager;
+
 import java.io.IOException;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 public class LoadBalancer {
     private int port = 0;
     private DatagramSocket socket;
+
+    private MessageManager messageManager;
 
     public LoadBalancer(int port) {
         this.port = port;
@@ -15,12 +18,13 @@ public class LoadBalancer {
     }
 
     /**
-     *  Try to open the DatagramSocket, if successful begin the main loop
+     * Try to open the DatagramSocket, if successful begin the main loop
      */
     private void start() {
         try {
             socket = new DatagramSocket(port);
             socket.setSoTimeout(0);
+            messageManager = new MessageManager(socket);
 
             loop();
         } catch (Exception e) {
@@ -33,17 +37,12 @@ public class LoadBalancer {
 
     /**
      * Check for incoming packets, and send any packets to be processed
-     * @throws IOException
+     *
+     * @throws IOException When a packet cannot be successfully retrieved on the socket
      */
     private void loop() throws IOException {
         while (true) {
-            byte[] buffer = new byte[2048];
-
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-            // System.err.println(packet.getSocketAddress());
-            socket.receive(packet);
-
-            processMessage(new String(buffer));
+            processMessage(messageManager.receive());
         }
     }
 
@@ -70,7 +69,7 @@ public class LoadBalancer {
 
     // TODO: toUpperCase()?
     public String getValidArg(String[] args, int pos) {
-        if(args.length > pos) {
+        if (args.length > pos) {
             return (args[pos] != null) ? args[pos].toUpperCase().trim() : "";
         } else {
             return "";
