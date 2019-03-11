@@ -18,6 +18,7 @@ public class MessageManager {
 
     /**
      * MessageManager constructor
+     *
      * @param socket The socket to use when sending and receiving UDP packets
      */
     public MessageManager(DatagramSocket socket) {
@@ -39,10 +40,14 @@ public class MessageManager {
 
     /**
      * Receives a message from the UDP packet
+     *
      * @return The received message as a string
      */
-    public String receive() {
-        // TODO: Stub
-        return new String();
+    public String receive() throws IOException {
+        byte[] buffer = new byte[2048];
+
+        socket.receive(new DatagramPacket(buffer, buffer.length));
+
+        return new String(buffer);
     }
 }
