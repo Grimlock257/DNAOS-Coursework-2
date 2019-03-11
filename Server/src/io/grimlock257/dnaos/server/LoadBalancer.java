@@ -1,11 +1,12 @@
 package io.grimlock257.dnaos.server;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 
 public class LoadBalancer {
-    private DatagramSocket socket;
     private int port = 0;
+    private DatagramSocket socket;
 
     public LoadBalancer(int port) {
         this.port = port;
@@ -14,26 +15,35 @@ public class LoadBalancer {
     }
 
     /**
-     *  Open the DatagramSocket and check for incoming packets forever
+     *  Try to open the DatagramSocket, if successful begin the main loop
      */
     private void start() {
         try {
             socket = new DatagramSocket(port);
             socket.setSoTimeout(0);
 
-            while (true) {
-                byte[] buffer = new byte[2048];
-
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
-
-                processMessage(new String(buffer));
-            }
+            loop();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             // Try / Catch?
             socket.close();
+        }
+    }
+
+    /**
+     * Check for incoming packets, and send any packets to be processed
+     * @throws IOException
+     */
+    private void loop() throws IOException {
+        while (true) {
+            byte[] buffer = new byte[2048];
+
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            // System.err.println(packet.getSocketAddress());
+            socket.receive(packet);
+
+            processMessage(new String(buffer));
         }
     }
 
