@@ -5,6 +5,13 @@ import io.grimlock257.dnaos.server.managers.MessageManager;
 import java.io.IOException;
 import java.net.DatagramSocket;
 
+/**
+ * This class represents the load balancer and all it's functionality
+ * <p>
+ * Adam Watson
+ * Year 2 - Computer Systems Engineering
+ * Distributed Network Architecture & Operating Systems Module CW-2
+ */
 public class LoadBalancer {
     private int port = 0;
     private DatagramSocket socket;
