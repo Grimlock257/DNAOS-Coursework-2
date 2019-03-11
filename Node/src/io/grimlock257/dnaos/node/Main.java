@@ -16,6 +16,6 @@ public class Main {
      * Create nonstatic instance of main which creates a new nonstatic Node with the specified port to be active on
      */
     public Main() {
-        new Node(5000);
+        new Node(5000, "localhost", 4000);
     }
 }

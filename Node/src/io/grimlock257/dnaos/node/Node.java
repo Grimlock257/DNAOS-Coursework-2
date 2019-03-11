@@ -17,13 +17,22 @@ import java.net.InetAddress;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public class Node {
-    private int port;
+    private int nodePort;
+    private String lbHost;
+    private int lbPort;
     private DatagramSocket socket;
 
     private MessageManager messageManager;
 
-    public Node(int port) {
-        this.port = port;
+    /**
+     * Create a new node instance
+     * @param nodePort The port for the node to communicate through
+     * @param lbPort The port of the load balancer
+     */
+    public Node(int nodePort, String lbHost, int lbPort) {
+        this.nodePort = nodePort;
+        this.lbHost = lbHost;
+        this.lbPort = lbPort;
 
         start();
     }
@@ -33,11 +42,12 @@ public class Node {
      */
     private void start() {
         try {
-            socket = new DatagramSocket(5000);
+            socket = new DatagramSocket(nodePort);
             messageManager = new MessageManager(socket);
 
             // System.out.println("[INFO] addr: " + addr.toString());
 
+            // try send register, once received confirmation of register, begin the main loop?
             loop();
         } catch (Exception e) {
             e.printStackTrace();
@@ -53,13 +63,13 @@ public class Node {
         // Temporarily get input from the keyboard until the initiator/client program is complete
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader keyboard = new BufferedReader(input);
-        InetAddress addr = InetAddress.getByName("localhost");
+        InetAddress addr = InetAddress.getByName(lbHost);
 
         while (true) {
             System.out.print("> ");
             String message = keyboard.readLine();
 
-            messageManager.send(message, addr, 4000);
+            messageManager.send(message, addr, lbPort);
         }
     }
 }
