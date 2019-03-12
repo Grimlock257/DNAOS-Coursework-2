@@ -88,6 +88,8 @@ public class Node {
 
         // These messages are just for testing at the moment
         switch (getValidArg(args, 0)) {
+            case "":
+                break;
             case "CONFIRM":
                 System.out.println("[INFO] processMessage received 'CONFIRM'");
                 connected = true;

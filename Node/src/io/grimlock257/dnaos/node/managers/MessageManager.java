@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 /**
  * Message Manager for Node project
@@ -16,6 +17,9 @@ import java.net.InetAddress;
 public class MessageManager {
     private DatagramSocket socket;
 
+    private ArrayList<String> messages;
+    private boolean newMessage = false;
+
     /**
      * MessageManager constructor
      *
@@ -23,6 +27,7 @@ public class MessageManager {
      */
     public MessageManager(DatagramSocket socket) {
         this.socket = socket;
+        this.messages = new ArrayList<String>();
     }
 
     /**
@@ -44,10 +49,38 @@ public class MessageManager {
      * @return The received message as a string
      */
     public String receive() throws IOException {
-        byte[] buffer = new byte[2048];
+        // Create a new thread to receive the incoming packet so that Node isn't blocked completely while waiting for a response
+        Thread receive = new Thread("node_receive_thread") {
+            public void run() {
+                while (true) {
+                    byte[] buffer = new byte[2048];
 
-        socket.receive(new DatagramPacket(buffer, buffer.length));
+                    try {
+                        socket.receive(new DatagramPacket(buffer, buffer.length));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    // new String(buffer);
 
-        return new String(buffer);
+                    String message = new String(buffer);
+
+                    if (message.length() > 0) {
+                        messages.add(message);
+                        newMessage = true;
+                    }
+
+                    System.out.println(messages.toString());
+                }
+            }
+        };
+
+        receive.start();
+
+        if (newMessage) {
+            newMessage = false;
+            return messages.get(messages.size() - 1);
+        } else {
+            return "";
+        }
     }
 }
