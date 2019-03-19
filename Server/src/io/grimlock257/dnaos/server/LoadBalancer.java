@@ -50,7 +50,11 @@ public class LoadBalancer {
      */
     private void loop() throws IOException {
         while (true) {
-            processMessage(messageManager.receive());
+            String nextMessage = messageManager.getNextMessage();
+
+            if (nextMessage != "") {
+                processMessage(nextMessage);
+            }
         }
     }
 

@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ConcurrentModificationException;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * Message Manager for Server project
@@ -16,6 +19,9 @@ import java.net.InetAddress;
 public class MessageManager {
     private DatagramSocket socket;
 
+    private LinkedList<HashMap<String, Boolean>> messages;
+    private final Object messageLock = new Object();
+
     /**
      * MessageManager constructor
      *
@@ -23,6 +29,9 @@ public class MessageManager {
      */
     public MessageManager(DatagramSocket socket) {
         this.socket = socket;
+        this.messages = new LinkedList<>();
+
+        this.receive();
     }
 
     /**
@@ -39,15 +48,93 @@ public class MessageManager {
     }
 
     /**
-     * Receives a message from the UDP packet
-     *
-     * @return The received message as a string
+     * Creates a thread that receives a message from an incoming UDP packet
+     * If a packet is received, add the contents of the packet to the messages LinkedList
      */
-    public String receive() throws IOException {
-        byte[] buffer = new byte[2048];
+    private void receive() {
+        // Create a new thread to receive the incoming packet so that Node isn't blocked completely while waiting for a response
+        Thread receive = new Thread("server_receive_thread") {
+            public void run() {
+                while (true) {
+                    byte[] buffer = new byte[2048];
 
-        socket.receive(new DatagramPacket(buffer, buffer.length));
+                    try {
+                        socket.receive(new DatagramPacket(buffer, buffer.length));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
-        return new String(buffer);
+                    String message = new String(buffer);
+
+                    if (message.length() > 0) {
+                        HashMap<String, Boolean> newMsg = new HashMap<String, Boolean>() {{
+                            put(message, false);
+                        }};
+
+                        addMessage(newMsg);
+                    }
+                }
+            }
+        };
+
+        receive.start();
+    }
+
+    /**
+     * Add a message in the form of a HashMap<message, hasRead> to the messages LinkedList
+     *
+     * @param message The message to add to the messages LinkedList
+     */
+    private void addMessage(HashMap<String, Boolean> message) {
+        // Lock the messagesLock so that only one thread may access the messages LinkedList at any one time
+        synchronized (messageLock) {
+            messages.add(message);
+
+            System.err.println("ADD: " + this.getMessages().toString());
+        }
+    }
+
+    /**
+     * Get the LinkedList of messages
+     *
+     * @return The messages LinkedList containing all the messages currently stored
+     */
+    private LinkedList<HashMap<String, Boolean>> getMessages() {
+        // Lock the messagesLock so that only one thread may access the messages LinkedList at any one time
+        synchronized (messageLock) {
+            return messages;
+        }
+    }
+
+    /**
+     * Fetch the next unread message from the messages LinkedList and mark it as read.
+     *
+     * @return The next unread message as a String
+     */
+    public String getNextMessage() {
+        try {
+            // Lock the messagesLock so that only one thread may access the messages LinkedList at any one time
+            synchronized (messageLock) {
+                for (int i = 0; i < getMessages().size(); i++) {
+                    HashMap<String, Boolean> message = getMessages().get(i);
+
+                    // Check if the message has been read or not
+                    if (!message.get(message.keySet().toArray()[0])) {
+                        // Update the corresponding HashMap
+                        getMessages().set(i, new HashMap<String, Boolean>() {{
+                            put(message.keySet().toArray()[0].toString(), true);
+                        }});
+
+                        System.err.println("ALT: " + this.getMessages().toString());
+
+                        return message.keySet().toArray()[0].toString();
+                    }
+                }
+            }
+        } catch (ConcurrentModificationException e) {
+            e.printStackTrace();
+        }
+
+        return "";
     }
 }
