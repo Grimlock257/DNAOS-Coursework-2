@@ -1,6 +1,7 @@
 package io.grimlock257.dnaos.node;
 
 import io.grimlock257.dnaos.node.managers.MessageManager;
+import io.grimlock257.dnaos.node.message.MessageType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -77,7 +78,7 @@ public class Node {
                 messageManager.send(message, addr, lbPort);
             } else if (!hasSentRegister) {
                 System.out.println("Connecting to load balancer...");
-                messageManager.send("REGISTER", addr, lbPort);
+                messageManager.send(MessageType.NODE_REGISTER.toString(), addr, lbPort);
                 hasSentRegister = true;
             }
 
@@ -91,15 +92,13 @@ public class Node {
     }
 
     public void processMessage(String message) throws IOException {
-        System.out.println("[DEBUG] Received message: " + message);
+        // System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
 
         // These messages are just for testing at the moment
-        switch (getValidArg(args, 0)) {
-            case "":
-                break;
-            case "CONFIRM":
-                System.out.println("[INFO] processMessage received 'CONFIRM'");
+        switch (getValidMessageType(args)) {
+            case REGISTER_CONFRIM:
+                System.out.println("[INFO] processMessage received 'REGISTER_CONFRIM'");
                 connected = true;
                 break;
             default:
@@ -107,7 +106,19 @@ public class Node {
         }
     }
 
-    // TODO: toUpperCase()?
+    public MessageType getValidMessageType(String[] args) {
+        if (args.length > 0 && args[0] != null) {
+            try {
+                return MessageType.valueOf(args[0].trim());
+            } catch (IllegalArgumentException e) {
+                return MessageType.UNKNOWN;
+            }
+        } else {
+            return MessageType.UNKNOWN;
+        }
+    }
+
+    // TODO: toUpperCase()? UPDATE
     public String getValidArg(String[] args, int pos) {
         if (args.length > pos) {
             return (args[pos] != null) ? args[pos].toUpperCase().trim() : "";

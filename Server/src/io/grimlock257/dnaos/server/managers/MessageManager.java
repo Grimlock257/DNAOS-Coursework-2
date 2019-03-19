@@ -90,7 +90,7 @@ public class MessageManager {
         synchronized (messageLock) {
             messages.add(message);
 
-            System.err.println("ADD: " + this.getMessages().toString());
+            // System.err.println("ADD: " + this.getMessages().toString());
         }
     }
 
@@ -125,7 +125,7 @@ public class MessageManager {
                             put(message.keySet().toArray()[0].toString(), true);
                         }});
 
-                        System.err.println("ALT: " + this.getMessages().toString());
+                        // System.err.println("ALT: " + this.getMessages().toString());
 
                         return message.keySet().toArray()[0].toString();
                     }

@@ -1,6 +1,7 @@
 package io.grimlock257.dnaos.server;
 
 import io.grimlock257.dnaos.server.managers.MessageManager;
+import io.grimlock257.dnaos.server.message.MessageType;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -67,21 +68,34 @@ public class LoadBalancer {
         String[] args = message.split(",");
 
         // These messages are just for testing at the moment
-        switch (getValidArg(args, 0)) {
-            case "QUIT":
-                System.out.println("[INFO] processMessage received 'QUIT'");
+        switch (getValidMessageType(args)) {
+            case LB_SHUTDOWN:
+                System.out.println("[INFO] processMessage received 'LB_SHUTDOWN'");
                 System.exit(0);
-            case "REGISTER":
-                System.out.println("[INFO] processMessage received 'REGISTER'");
+                break;
+            case NODE_REGISTER:
+                System.out.println("[INFO] processMessage received 'NODE_REGISTER'");
                 InetAddress nodeAddr = InetAddress.getByName("localhost");
-                messageManager.send("CONFIRM", nodeAddr, 5000);
+                messageManager.send(MessageType.REGISTER_CONFRIM.toString(), nodeAddr, 5000);
                 break;
             default:
                 System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
         }
     }
 
-    // TODO: toUpperCase()?
+    public MessageType getValidMessageType(String[] args) {
+        if (args.length > 0 && args[0] != null) {
+            try {
+                return MessageType.valueOf(args[0].trim());
+            } catch (IllegalArgumentException e) {
+                return MessageType.UNKNOWN;
+            }
+        } else {
+            return MessageType.UNKNOWN;
+        }
+    }
+
+    // TODO: toUpperCase()? UPDATE
     public String getValidArg(String[] args, int pos) {
         if (args.length > pos) {
             return (args[pos] != null) ? args[pos].toUpperCase().trim() : "";
