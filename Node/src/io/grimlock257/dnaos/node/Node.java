@@ -18,6 +18,7 @@ import java.net.InetAddress;
  */
 public class Node {
     private boolean connected = false;
+    private boolean hasSentRegister = false; // TODO: Better method of implementing this
 
     private int nodePort;
     private String lbHost;
@@ -28,8 +29,9 @@ public class Node {
 
     /**
      * Create a new node instance
+     *
      * @param nodePort The port for the node to communicate through
-     * @param lbPort The port of the load balancer
+     * @param lbPort   The port of the load balancer
      */
     public Node(int nodePort, String lbHost, int lbPort) {
         this.nodePort = nodePort;
@@ -70,20 +72,26 @@ public class Node {
         while (true) {
             if (connected) {
                 System.out.print("> ");
-                String message = keyboard.readLine();
+                String message = keyboard.readLine(); // TODO: Causing block
 
                 messageManager.send(message, addr, lbPort);
-            } else {
+            } else if (!hasSentRegister) {
                 System.out.println("Connecting to load balancer...");
                 messageManager.send("REGISTER", addr, lbPort);
+                hasSentRegister = true;
             }
 
-            processMessage(messageManager.receive());
+            String nextMessage = messageManager.getNextMessage();
+
+            // TODO: Related to TODO: Causing block - thread the processMessage();
+            if (nextMessage != "") {
+                processMessage(nextMessage);
+            }
         }
     }
 
     public void processMessage(String message) throws IOException {
-        // System.out.println("[DEBUG] Received message: " + message);
+        System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
 
         // These messages are just for testing at the moment
