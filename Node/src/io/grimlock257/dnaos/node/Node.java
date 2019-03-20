@@ -21,6 +21,8 @@ public class Node {
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
 
+    private String name;
+    private int capacity;
     private int nodePort;
     private String lbHost;
     private int lbPort;
@@ -31,10 +33,15 @@ public class Node {
     /**
      * Create a new node instance
      *
+     * @param name     The name of the name
+     * @param capacity The maximum amount of jobs the node can handle at a time
      * @param nodePort The port for the node to communicate through
+     * @param lbHost   The IP address of the load balancer
      * @param lbPort   The port of the load balancer
      */
-    public Node(int nodePort, String lbHost, int lbPort) {
+    public Node(String name, int capacity, int nodePort, String lbHost, int lbPort) {
+        this.name = name;
+        this.capacity = capacity;
         this.nodePort = nodePort;
         this.lbHost = lbHost;
         this.lbPort = lbPort;
@@ -78,7 +85,7 @@ public class Node {
                 messageManager.send(message, addr, lbPort);
             } else if (!hasSentRegister) {
                 System.out.println("Connecting to load balancer...");
-                messageManager.send(MessageType.NODE_REGISTER.toString(), addr, lbPort);
+                messageManager.send(MessageType.NODE_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.nodePort + "," + this.name + "," + this.capacity, addr, lbPort);
                 hasSentRegister = true;
             }
 

@@ -1,7 +1,9 @@
 package io.grimlock257.dnaos.server;
 
 import io.grimlock257.dnaos.server.managers.MessageManager;
+import io.grimlock257.dnaos.server.managers.NodeManager;
 import io.grimlock257.dnaos.server.message.MessageType;
+import io.grimlock257.dnaos.server.node.Node;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -15,10 +17,18 @@ import java.net.InetAddress;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public class LoadBalancer {
+    // Constants storing indexes for information within a message
+    private final int I_MESSAGE_TYPE = 0;
+    private final int I_NODE_IP = 1;
+    private final int I_NODE_PORT = 2;
+    private final int I_NODE_NAME = 3;
+    private final int I_NODE_CAP = 4;
+
     private int port = 0;
     private DatagramSocket socket;
 
     private MessageManager messageManager;
+    private NodeManager nodeManager;
 
     public LoadBalancer(int port) {
         this.port = port;
@@ -27,13 +37,15 @@ public class LoadBalancer {
     }
 
     /**
-     * Try to open the DatagramSocket, if successful begin the main loop
+     * Try to open the DatagramSocket, if successful create the managers and begin the main loop
      */
     private void start() {
         try {
             socket = new DatagramSocket(port);
             socket.setSoTimeout(0);
+
             messageManager = new MessageManager(socket);
+            nodeManager = new NodeManager();
 
             loop();
         } catch (Exception e) {
@@ -64,7 +76,7 @@ public class LoadBalancer {
     // TODO: Enum or Message packaging containing Message subclasses (i.e MessageRegister, MessageResign etc.)
     // Messages: Node Register, Node Resign, New Job (client -> lb), New Job (lb -> node), Complete job (node -> lb), Complete Job (lb -> client), LB shutdown, Node shutdown
     public void processMessage(String message) throws IOException {
-        // System.out.println("[DEBUG] Received message: " + message);
+        System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
 
         // These messages are just for testing at the moment
@@ -75,8 +87,16 @@ public class LoadBalancer {
                 break;
             case NODE_REGISTER:
                 System.out.println("[INFO] processMessage received 'NODE_REGISTER'");
-                InetAddress nodeAddr = InetAddress.getByName("localhost");
-                messageManager.send(MessageType.REGISTER_CONFRIM.toString(), nodeAddr, 5000);
+
+                String nodeIP = getValidStringArg(args, I_NODE_IP);
+                int nodePort = getValidIntArg(args, I_NODE_PORT);
+                String nodeName = getValidStringArg(args, I_NODE_NAME);
+                int nodeCap = getValidIntArg(args, I_NODE_CAP);
+                InetAddress nodeAddr = InetAddress.getByName(nodeIP);
+
+                nodeManager.addNode(new Node(nodePort, nodeAddr, nodeCap, nodeName));
+
+                messageManager.send(MessageType.REGISTER_CONFRIM.toString(), nodeAddr, nodePort);
                 break;
             default:
                 System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
@@ -84,9 +104,9 @@ public class LoadBalancer {
     }
 
     public MessageType getValidMessageType(String[] args) {
-        if (args.length > 0 && args[0] != null) {
+        if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
-                return MessageType.valueOf(args[0].trim());
+                return MessageType.valueOf(args[I_MESSAGE_TYPE].trim());
             } catch (IllegalArgumentException e) {
                 return MessageType.UNKNOWN;
             }
@@ -96,11 +116,23 @@ public class LoadBalancer {
     }
 
     // TODO: toUpperCase()? UPDATE
-    public String getValidArg(String[] args, int pos) {
+    public String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
-            return (args[pos] != null) ? args[pos].toUpperCase().trim() : "";
+            return (args[pos] != null) ? args[pos].trim() : "";
         } else {
             return "";
+        }
+    }
+
+    public int getValidIntArg(String[] args, int pos) {
+        if (args.length > pos && args[pos] != null) {
+            try {
+                return Integer.parseInt(args[pos].trim());
+            } catch (NumberFormatException e) {
+                return -1;
+            }
+        } else {
+            return -1;
         }
     }
 }
