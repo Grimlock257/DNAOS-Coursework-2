@@ -96,7 +96,7 @@ public class LoadBalancer {
 
                 nodeManager.addNode(new Node(nodePort, nodeAddr, nodeCap, nodeName));
 
-                messageManager.send(MessageType.REGISTER_CONFRIM.toString(), nodeAddr, nodePort);
+                messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
 
                 // TODO: Remove - temporary testing
                 messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);

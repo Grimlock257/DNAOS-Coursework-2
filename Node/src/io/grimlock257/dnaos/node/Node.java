@@ -113,8 +113,8 @@ public class Node {
 
         // These messages are just for testing at the moment
         switch (getValidMessageType(args)) {
-            case REGISTER_CONFRIM:
-                System.out.println("[INFO] processMessage received 'REGISTER_CONFRIM'");
+            case REGISTER_CONFIRM:
+                System.out.println("[INFO] processMessage received 'REGISTER_CONFIRM'");
                 connected = true;
                 break;
             case NEW_JOB:
