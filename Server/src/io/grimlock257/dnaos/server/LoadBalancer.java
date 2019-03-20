@@ -97,6 +97,10 @@ public class LoadBalancer {
                 nodeManager.addNode(new Node(nodePort, nodeAddr, nodeCap, nodeName));
 
                 messageManager.send(MessageType.REGISTER_CONFRIM.toString(), nodeAddr, nodePort);
+
+                // TODO: Remove - temporary testing
+                messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
+                messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
                 break;
             default:
                 System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");

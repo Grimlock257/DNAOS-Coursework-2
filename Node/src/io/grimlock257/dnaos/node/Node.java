@@ -1,5 +1,7 @@
 package io.grimlock257.dnaos.node;
 
+import io.grimlock257.dnaos.node.job.Job;
+import io.grimlock257.dnaos.node.managers.JobManager;
 import io.grimlock257.dnaos.node.managers.MessageManager;
 import io.grimlock257.dnaos.node.message.MessageType;
 
@@ -18,6 +20,10 @@ import java.net.InetAddress;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public class Node {
+    // Constants storing indexes for information within a message
+    private final int I_MESSAGE_TYPE = 0;
+    private final int I_JOB_DURATION = 1;
+
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
 
@@ -29,6 +35,7 @@ public class Node {
     private DatagramSocket socket;
 
     private MessageManager messageManager;
+    private JobManager jobManager;
 
     /**
      * Create a new node instance
@@ -55,7 +62,9 @@ public class Node {
     private void start() {
         try {
             socket = new DatagramSocket(nodePort);
+
             messageManager = new MessageManager(socket);
+            jobManager = new JobManager();
 
             // System.out.println("[INFO] addr: " + addr.toString());
 
@@ -108,15 +117,23 @@ public class Node {
                 System.out.println("[INFO] processMessage received 'REGISTER_CONFRIM'");
                 connected = true;
                 break;
+            case NEW_JOB:
+                System.out.println("[INFO] processMessage received 'NEW_JOB'");
+
+                int jobDuration = getValidIntArg(args, I_JOB_DURATION);
+
+                jobManager.addJob(new Job(jobDuration));
+
+                break;
             default:
                 System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
         }
     }
 
     public MessageType getValidMessageType(String[] args) {
-        if (args.length > 0 && args[0] != null) {
+        if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
-                return MessageType.valueOf(args[0].trim());
+                return MessageType.valueOf(args[I_MESSAGE_TYPE].trim());
             } catch (IllegalArgumentException e) {
                 return MessageType.UNKNOWN;
             }
@@ -126,11 +143,23 @@ public class Node {
     }
 
     // TODO: toUpperCase()? UPDATE
-    public String getValidArg(String[] args, int pos) {
+    public String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
-            return (args[pos] != null) ? args[pos].toUpperCase().trim() : "";
+            return (args[pos] != null) ? args[pos].trim() : "";
         } else {
             return "";
+        }
+    }
+
+    public int getValidIntArg(String[] args, int pos) {
+        if (args.length > pos && args[pos] != null) {
+            try {
+                return Integer.parseInt(args[pos].trim());
+            } catch (NumberFormatException e) {
+                return -1;
+            }
+        } else {
+            return -1;
         }
     }
 }
