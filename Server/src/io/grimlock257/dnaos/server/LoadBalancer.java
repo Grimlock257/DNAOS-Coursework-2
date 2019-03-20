@@ -1,5 +1,7 @@
 package io.grimlock257.dnaos.server;
 
+import io.grimlock257.dnaos.server.job.Job;
+import io.grimlock257.dnaos.server.managers.JobManager;
 import io.grimlock257.dnaos.server.managers.MessageManager;
 import io.grimlock257.dnaos.server.managers.NodeManager;
 import io.grimlock257.dnaos.server.message.MessageType;
@@ -23,12 +25,14 @@ public class LoadBalancer {
     private final int I_NODE_PORT = 2;
     private final int I_NODE_NAME = 3;
     private final int I_NODE_CAP = 4;
+    private final int I_JOB_DURATION = 1;
 
     private int port = 0;
     private DatagramSocket socket;
 
     private MessageManager messageManager;
     private NodeManager nodeManager;
+    private JobManager jobManager;
 
     public LoadBalancer(int port) {
         this.port = port;
@@ -46,6 +50,7 @@ public class LoadBalancer {
 
             messageManager = new MessageManager(socket);
             nodeManager = new NodeManager();
+            jobManager = new JobManager();
 
             loop();
         } catch (Exception e) {
@@ -101,6 +106,14 @@ public class LoadBalancer {
                 // TODO: Remove - temporary testing
                 messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
                 messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
+                break;
+            case NEW_JOB:
+                System.out.println("[INFO] processMessage received 'NEW_JOB'");
+
+                int jobDuration = getValidIntArg(args, I_JOB_DURATION);
+
+                jobManager.addJob(new Job(jobDuration));
+
                 break;
             default:
                 System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
