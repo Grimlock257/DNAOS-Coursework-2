@@ -34,6 +34,11 @@ public class LoadBalancer {
     private NodeManager nodeManager;
     private JobManager jobManager;
 
+    /**
+     * Create a new load balancer instance
+     *
+     * @param port The port for the LoadBalancer to operate on
+     */
     public LoadBalancer(int port) {
         this.port = port;
 
@@ -76,6 +81,12 @@ public class LoadBalancer {
         }
     }
 
+    /**
+     * Take in a message a string, analyse it and perform the appropriate action based on the contents
+     *
+     * @param message The message to analyse
+     * @throws IOException
+     */
     // Message structure: command, args0, args1, ..., args2
     // E.g: REGISTER, 192.168.1.15
     // TODO: Enum or Message packaging containing Message subclasses (i.e MessageRegister, MessageResign etc.)
@@ -120,6 +131,12 @@ public class LoadBalancer {
         }
     }
 
+    /**
+     * Validate the MessageType of the message
+     *
+     * @param args The message broken up into elements based on commas
+     * @return The MessageType (UNKNOWN is non valid)
+     */
     public MessageType getValidMessageType(String[] args) {
         if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
@@ -132,6 +149,13 @@ public class LoadBalancer {
         }
     }
 
+    /**
+     * Validate a string argument within the message at the specified pos
+     *
+     * @param args The message broken up into elements based on commas
+     * @param pos  The element to validate
+     * @return The trimmed string or "" if invalid or null
+     */
     // TODO: toUpperCase()? UPDATE
     public String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
@@ -141,6 +165,13 @@ public class LoadBalancer {
         }
     }
 
+    /**
+     * Validate an integer argument with the message at the specified pos
+     *
+     * @param args The message broken up into elements based on commas
+     * @param pos  The element to validate
+     * @return The parsed integer or -1 if invalid or null
+     */
     public int getValidIntArg(String[] args, int pos) {
         if (args.length > pos && args[pos] != null) {
             try {

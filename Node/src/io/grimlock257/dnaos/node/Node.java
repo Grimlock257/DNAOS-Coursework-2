@@ -57,7 +57,7 @@ public class Node {
     }
 
     /**
-     * Try to open the DatagramSocket, if successful begin the main loop
+     * Try to open the DatagramSocket, if successful create the managers and begin the main loop
      */
     private void start() {
         try {
@@ -107,6 +107,12 @@ public class Node {
         }
     }
 
+    /**
+     * Take in a message a string, analyse it and perform the appropriate action based on the contents
+     *
+     * @param message The message to analyse
+     * @throws IOException
+     */
     public void processMessage(String message) throws IOException {
         // System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
@@ -130,6 +136,12 @@ public class Node {
         }
     }
 
+    /**
+     * Validate the MessageType of the message
+     *
+     * @param args The message broken up into elements based on commas
+     * @return The MessageType (UNKNOWN is non valid)
+     */
     public MessageType getValidMessageType(String[] args) {
         if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
@@ -142,6 +154,13 @@ public class Node {
         }
     }
 
+    /**
+     * Validate a string argument within the message at the specified pos
+     *
+     * @param args The message broken up into elements based on commas
+     * @param pos  The element to validate
+     * @return The trimmed string or "" if invalid or null
+     */
     // TODO: toUpperCase()? UPDATE
     public String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
@@ -151,6 +170,14 @@ public class Node {
         }
     }
 
+    /**
+     * Validate an integer argument with the message at the specified pos
+     *
+     * @param args The message broken up into elements based on commas
+     * @param pos  The element to validate
+     * @return The parsed integer or -1 if invalid or null
+     */
+    // TODO: Handle -1 outputs from this method
     public int getValidIntArg(String[] args, int pos) {
         if (args.length > pos && args[pos] != null) {
             try {

@@ -52,6 +52,7 @@ public class JobManager {
      * @param job  The job that is being allocated
      * @param node The node which is being allocated the job
      */
+    // TODO: Untested
     public void allocateJob(Job job, Node node) {
 
     }
@@ -74,6 +75,7 @@ public class JobManager {
      * @return The next unallocated job as a Job
      */
     // TODO: Mark as BEING_ALLOCATED to prevent two threads from trying to allocate?
+    // TODO: Untested
     public Job getNextJob() {
         return null;
     }
@@ -84,6 +86,7 @@ public class JobManager {
      * @param node The node whose jobs to find
      * @return The LinkedHashMap of the Jobs and JobStatus belonging to the specified Node
      */
+    // TODO: Untested
     public LinkedHashMap<Job, JobAlloc> getNodeJobs(Node node) {
         return null;
     }

@@ -5,29 +5,65 @@ import io.grimlock257.dnaos.node.job.JobStatus;
 
 import java.util.LinkedHashMap;
 
+/**
+ * Job Manager for Node project
+ * This class handles the storage of jobs and their status
+ * <p>
+ * Adam Watson
+ * Year 2 - Computer Systems Engineering
+ * Distributed Network Architecture & Operating Systems Module CW-2
+ */
 public class JobManager {
     private LinkedHashMap<Job, JobStatus> jobs;
 
+    /**
+     * Job constructor
+     */
     public JobManager() {
         this.jobs = new LinkedHashMap<>();
     }
 
+
+    /**
+     * Add a job to the jobs LinkedHashMap
+     *
+     * @param job The job to add to the jobs LinkedHashMap
+     */
     public void addJob(Job job) {
         this.jobs.put(job, JobStatus.QUEUED);
 
         System.out.println("[DEBUG] Jobs list: " + jobs.toString());
     }
 
+    /**
+     * Remove a job from the jobs LinkedHashMap
+     *
+     * @param job The job to remove from the jobs LinkedHashMap
+     */
     // TODO: Untested
     public void removeJob(Job job) {
         this.jobs.remove(job);
     }
 
+    /**
+     * Update the JobStatus of a job
+     *
+     * @param job       The job that has the JobStatus to be updated
+     * @param newStatus The new status of the job
+     */
+    // TODO: Untested
     public void updateJobStatus(Job job, JobStatus newStatus) {
         this.jobs.replace(job, newStatus);
     }
 
-    public void getNextJob() {
-
+    /**
+     * Fetch the next unallocated job from the jobs LinkedHashMap.
+     *
+     * @return The next unallocated job as a Job
+     */
+    // TODO: Mark as BEING_ALLOCATED to prevent two threads from trying to allocate?
+    // TODO: Untested
+    public Job getNextJob() {
+        return null;
     }
 }
