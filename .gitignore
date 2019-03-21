@@ -1,5 +1,7 @@
 .idea/
 
+out/
+
 Node/Node.iml
 Node/bin/
 Node/src/META-INF/
