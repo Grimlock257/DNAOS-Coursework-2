@@ -21,11 +21,17 @@ import java.net.InetAddress;
 public class LoadBalancer {
     // Constants storing indexes for information within a message
     private final int I_MESSAGE_TYPE = 0;
+    private final int I_CLIENT_IP = 1;
+    private final int I_CLIENT_PORT = 2;
     private final int I_NODE_IP = 1;
     private final int I_NODE_PORT = 2;
     private final int I_NODE_NAME = 3;
     private final int I_NODE_CAP = 4;
     private final int I_JOB_DURATION = 1;
+
+    // TODO: Temp - need Client representation class
+    private String clientIP;
+    private int clientPort;
 
     private int port = 0;
     private DatagramSocket socket;
@@ -101,6 +107,15 @@ public class LoadBalancer {
                 System.out.println("[INFO] processMessage received 'LB_SHUTDOWN'");
                 System.exit(0);
                 break;
+            case CLIENT_REGISTER:
+                System.out.println("[INFO] processMessage received 'CLIENT_REGISTER'");
+
+                clientIP = getValidStringArg(args, I_CLIENT_IP);
+                clientPort = getValidIntArg(args, I_CLIENT_PORT);
+                InetAddress clientAddr = InetAddress.getByName(clientIP);
+
+                messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
+                break;
             case NODE_REGISTER:
                 System.out.println("[INFO] processMessage received 'NODE_REGISTER'");
 
@@ -115,8 +130,8 @@ public class LoadBalancer {
                 messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
 
                 // TODO: Remove - temporary testing
-                messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
-                messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
+                // messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
+                // messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
                 break;
             case NEW_JOB:
                 System.out.println("[INFO] processMessage received 'NEW_JOB'");

@@ -8,6 +8,7 @@ package io.grimlock257.dnaos.server.message;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public enum MessageType {
+    CLIENT_REGISTER,
     NODE_REGISTER,
     NODE_RESIGN,
     NEW_JOB,
