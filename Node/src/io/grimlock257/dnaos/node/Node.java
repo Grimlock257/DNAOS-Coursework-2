@@ -5,9 +5,7 @@ import io.grimlock257.dnaos.node.managers.JobManager;
 import io.grimlock257.dnaos.node.managers.MessageManager;
 import io.grimlock257.dnaos.node.message.MessageType;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
@@ -81,18 +79,10 @@ public class Node {
      * @throws IOException When keyboard input can not be retrieved
      */
     private void loop() throws IOException {
-        // Temporarily get input from the keyboard until the initiator/client program is complete
-        InputStreamReader input = new InputStreamReader(System.in);
-        BufferedReader keyboard = new BufferedReader(input);
         InetAddress addr = InetAddress.getByName(lbHost);
 
         while (true) {
-            if (connected) {
-                System.out.print("> ");
-                String message = keyboard.readLine(); // TODO: Causing block
-
-                messageManager.send(message, addr, lbPort);
-            } else if (!hasSentRegister) {
+            if (!hasSentRegister) {
                 System.out.println("Connecting to load balancer...");
                 messageManager.send(MessageType.NODE_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.nodePort + "," + this.name + "," + this.capacity, addr, lbPort);
                 hasSentRegister = true;
