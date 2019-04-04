@@ -59,9 +59,10 @@ public class LoadBalancer {
             socket = new DatagramSocket(port);
             socket.setSoTimeout(0);
 
-            messageManager = new MessageManager(socket);
-            nodeManager = new NodeManager();
-            jobManager = new JobManager();
+            messageManager = MessageManager.getInstance();
+            MessageManager.getInstance().init(socket);
+            nodeManager = NodeManager.getInstance();
+            jobManager = JobManager.getInstance();
 
             loop();
         } catch (Exception e) {

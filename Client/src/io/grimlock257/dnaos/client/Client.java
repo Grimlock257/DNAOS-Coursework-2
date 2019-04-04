@@ -57,8 +57,9 @@ public class Client {
         try {
             socket = new DatagramSocket(clientPort);
 
-            messageManager = new MessageManager(socket);
-            jobManager = new JobManager();
+            messageManager = MessageManager.getInstance();
+            messageManager.init(socket);
+            jobManager = JobManager.getInstance();
 
             // System.out.println("[INFO] addr: " + addr.toString());
 

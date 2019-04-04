@@ -13,13 +13,28 @@ import java.util.LinkedList;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public class NodeManager {
+    private static NodeManager instance = null;
+
     private LinkedList<Node> nodes;
 
     /**
      * NodeManager constructor
      */
-    public NodeManager() {
+    private NodeManager() {
         this.nodes = new LinkedList<>();
+    }
+
+    /**
+     * Get the instance of the NodeManager singleton
+     *
+     * @return The instance of the NodeManager
+     */
+    public static NodeManager getInstance() {
+        if (instance == null) {
+            instance = new NodeManager();
+        }
+
+        return instance;
     }
 
     /**

@@ -61,8 +61,9 @@ public class Node {
         try {
             socket = new DatagramSocket(nodePort);
 
-            messageManager = new MessageManager(socket);
-            jobManager = new JobManager();
+            messageManager = MessageManager.getInstance();
+            messageManager.init(socket);
+            jobManager = JobManager.getInstance();
 
             // System.out.println("[INFO] addr: " + addr.toString());
 

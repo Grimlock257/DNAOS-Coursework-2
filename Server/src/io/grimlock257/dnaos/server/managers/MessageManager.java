@@ -17,6 +17,8 @@ import java.util.LinkedList;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public class MessageManager {
+    private static MessageManager instance = null;
+
     private DatagramSocket socket;
 
     private LinkedList<HashMap<String, Boolean>> messages;
@@ -24,14 +26,33 @@ public class MessageManager {
 
     /**
      * MessageManager constructor
-     *
-     * @param socket The socket to use when sending and receiving UDP packets
      */
-    public MessageManager(DatagramSocket socket) {
-        this.socket = socket;
+    private MessageManager() {
         this.messages = new LinkedList<>();
 
         this.receive();
+    }
+
+    /**
+     * Get the instance of the MessageManager singleton
+     *
+     * @return The instance of the MessageManager
+     */
+    public static MessageManager getInstance() {
+        if (instance == null) {
+            instance = new MessageManager();
+        }
+
+        return instance;
+    }
+
+    /**
+     * Setup the socket for the MessageManager to use
+     *
+     * @param socket The socket to use when sending and receiving UDP packets
+     */
+    public void init(DatagramSocket socket) {
+        this.socket = socket;
     }
 
     /**

@@ -14,15 +14,29 @@ import java.util.LinkedHashMap;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public class JobManager {
+    private static JobManager instance = null;
+
     private LinkedHashMap<Job, JobStatus> jobs;
 
     /**
      * Job constructor
      */
-    public JobManager() {
+    private JobManager() {
         this.jobs = new LinkedHashMap<>();
     }
 
+    /**
+     * Get the instance of the JobManager singleton
+     *
+     * @return The instance of the JobManager
+     */
+    public static JobManager getInstance() {
+        if (instance == null) {
+            instance = new JobManager();
+        }
+
+        return instance;
+    }
 
     /**
      * Add a job to the jobs LinkedHashMap
