@@ -45,7 +45,7 @@ public class NodeManager {
     public void addNode(Node node) {
         nodes.add(node);
 
-        System.out.println("[DEBUG] Nodes list: " + nodes.toString());
+        System.out.println("[DEBUG] Nodes list: \n" + this.toString());
     }
 
     /**
@@ -56,5 +56,27 @@ public class NodeManager {
     // TODO: Untested
     public void removeNode(Node node) {
         nodes.remove(node);
+    }
+
+    /**
+     * Used to display the nodes LinkedList in a nice, readable format
+     *
+     * @return The formatted string
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        int i = 0;
+        for (Node node : nodes) {
+            i++;
+
+            sb.append(node.toString());
+
+            if (i != nodes.size())
+                sb.append("\n");
+        }
+
+        return sb.toString();
     }
 }

@@ -4,6 +4,7 @@ import io.grimlock257.dnaos.node.job.Job;
 import io.grimlock257.dnaos.node.job.JobStatus;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Job Manager for Node project
@@ -46,7 +47,7 @@ public class JobManager {
     public void addJob(Job job) {
         this.jobs.put(job, JobStatus.QUEUED);
 
-        System.out.println("[DEBUG] Jobs list: " + jobs.toString());
+        System.out.println("[DEBUG] Jobs list: \n" + this.toString());
     }
 
     /**
@@ -79,5 +80,31 @@ public class JobManager {
     // TODO: Untested
     public Job getNextJob() {
         return null;
+    }
+
+    /**
+     * Used to display the jobs LinkedHashMap in a nice, readable format
+     *
+     * @return The formatted string
+     */
+    // TODO: Untested
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        int i = 0;
+        for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
+            i++;
+
+            sb.append(jobDetails.getKey().toString());
+            sb.append(", ");
+            sb.append("Status: ");
+            sb.append(jobDetails.getValue().toString());
+
+            if (i != jobs.size())
+                sb.append("\n");
+        }
+
+        return sb.toString();
     }
 }

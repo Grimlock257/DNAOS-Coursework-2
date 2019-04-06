@@ -111,11 +111,13 @@ public class Node {
         // These messages are just for testing at the moment
         switch (getValidMessageType(args)) {
             case REGISTER_CONFIRM:
-                System.out.println("[INFO] processMessage received 'REGISTER_CONFIRM'");
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
                 connected = true;
                 break;
             case NEW_JOB:
-                System.out.println("[INFO] processMessage received 'NEW_JOB'");
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
 
                 int jobDuration = getValidIntArg(args, I_JOB_DURATION);
 
@@ -123,7 +125,8 @@ public class Node {
 
                 break;
             default:
-                System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
+                System.out.println("===============================================================================");
+                System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
         }
     }
 

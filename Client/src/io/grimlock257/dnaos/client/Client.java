@@ -83,6 +83,7 @@ public class Client {
 
         while (true) {
             if (connected) {
+                System.out.println("===============================================================================");
                 System.out.print("> ");
 
                 try {
@@ -123,16 +124,19 @@ public class Client {
         // These messages are just for testing at the moment
         switch (getValidMessageType(args)) {
             case REGISTER_CONFIRM:
-                System.out.println("[INFO] processMessage received 'REGISTER_CONFIRM'");
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
                 connected = true;
                 break;
             case COMPLETE_JOB:
-                System.out.println("[INFO] processMessage received 'COMPLETE_JOB'");
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
 
                 // TODO: Retrieve the Job that has been completed from the message and update JobStatus of the Job within the JobManager
 
                 break;
             default:
+                System.out.println("===============================================================================");
                 System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
         }
     }

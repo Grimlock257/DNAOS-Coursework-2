@@ -1,5 +1,8 @@
 package io.grimlock257.dnaos.client;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 /**
  * Main class of Client project
  * <p>
@@ -21,6 +24,19 @@ public class Main {
             int port = Integer.parseInt(args[0]);
             String lbHost = args[1];
             int lbPort = Integer.parseInt(args[2]);
+
+            System.out.println("[INFO] Client online");
+            System.out.println("[INFO] Client details:");
+            try {
+                System.out.println("[INFO] - IP: " + InetAddress.getByName("localhost"));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            System.out.println("[INFO] - Port: " + port);
+            System.out.println("[INFO] - Load Balancer IP: " + lbHost);
+            System.out.println("[INFO] - Load Balancer Port: " + lbPort);
+            System.out.println("===============================================================================\n\n");
+
 
             new Client(port, lbHost, lbPort);
         } else {

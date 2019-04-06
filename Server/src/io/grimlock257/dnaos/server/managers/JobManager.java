@@ -6,6 +6,7 @@ import io.grimlock257.dnaos.server.job.JobStatus;
 import io.grimlock257.dnaos.server.node.Node;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Job Manager for Server project
@@ -48,7 +49,7 @@ public class JobManager {
     public void addJob(Job job) {
         this.jobs.put(job, new JobAlloc(null, JobStatus.UNALLOCATED));
 
-        System.out.println("[DEBUG] Jobs list: " + jobs.toString());
+        System.out.println("[DEBUG] Jobs list: \n" + this.toString());
     }
 
     /**
@@ -104,5 +105,30 @@ public class JobManager {
     // TODO: Untested
     public LinkedHashMap<Job, JobAlloc> getNodeJobs(Node node) {
         return null;
+    }
+
+    /**
+     * Used to display the jobs LinkedHashMap in a nice, readable format
+     *
+     * @return The formatted string
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        int i = 0;
+        for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
+            i++;
+
+            sb.append(jobDetails.getKey().toString());
+            sb.append(" --- ");
+            sb.append("Allocation Information: ");
+            sb.append(jobDetails.getValue().toString());
+
+            if (i != jobs.size())
+                sb.append("\n");
+        }
+
+        return sb.toString();
     }
 }

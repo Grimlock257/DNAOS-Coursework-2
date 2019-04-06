@@ -1,5 +1,8 @@
 package io.grimlock257.dnaos.server;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 /**
  * Main class of Server project
  * <p>
@@ -20,7 +23,17 @@ public class Main {
             // Get parameters from the supplied command line arguments
             int port = Integer.parseInt(args[0]);
 
+            // Display information about the Load Balancer
             System.out.println("[INFO] LoadBalancer online");
+            System.out.println("[INFO] LoadBalancer details:");
+            try {
+                System.out.println("[INFO] - IP: " + InetAddress.getByName("localhost"));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            System.out.println("[INFO] - Port: " + port);
+            System.out.println("===============================================================================\n\n");
+
             new LoadBalancer(port);
         } else {
             System.err.println("Invalid arguments supplied! Usage: <port>");

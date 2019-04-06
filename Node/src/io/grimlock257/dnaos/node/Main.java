@@ -1,5 +1,8 @@
 package io.grimlock257.dnaos.node;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 /**
  * Main class of Node project
  * <p>
@@ -23,6 +26,21 @@ public class Main {
             int port = Integer.parseInt(args[2]);
             String lbHost = args[3];
             int lbPort = Integer.parseInt(args[4]);
+
+            // Display information about the Node
+            System.out.println("[INFO] Node online");
+            System.out.println("[INFO] Node details:");
+            System.out.println("[INFO] - Name: " + name);
+            System.out.println("[INFO] - Capacity: " + capacity);
+            try {
+                System.out.println("[INFO] - IP: " + InetAddress.getByName("localhost"));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            System.out.println("[INFO] - Port: " + port);
+            System.out.println("[INFO] - Load Balancer IP: " + lbHost);
+            System.out.println("[INFO] - Load Balancer Port: " + lbPort);
+            System.out.println("===============================================================================\n\n");
 
             new Node(name, capacity, port, lbHost, lbPort);
         } else {

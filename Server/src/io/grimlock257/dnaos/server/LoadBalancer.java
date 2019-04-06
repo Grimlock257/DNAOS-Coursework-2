@@ -79,12 +79,21 @@ public class LoadBalancer {
      * @throws IOException When a packet cannot be successfully retrieved on the socket
      */
     private void loop() throws IOException {
+        System.out.println("Listening for messages...");
+
         while (true) {
+            // Process messages (if available)
             String nextMessage = messageManager.getNextMessage();
 
             if (nextMessage != "") {
                 processMessage(nextMessage);
             }
+
+            // Try allocate a job
+            // TODO: Thread this
+            // Node freestNode = nodeManager.getFreestNode();
+            // Job nextJob = jobManager.getNextJob();
+            // jobManager.allocateJob(nextJob, freestNode);
         }
     }
 
@@ -99,17 +108,19 @@ public class LoadBalancer {
     // TODO: Enum or Message packaging containing Message subclasses (i.e MessageRegister, MessageResign etc.)
     // Messages: Node Register, Node Resign, New Job (client -> lb), New Job (lb -> node), Complete job (node -> lb), Complete Job (lb -> client), LB shutdown, Node shutdown
     public void processMessage(String message) throws IOException {
-        System.out.println("[DEBUG] Received message: " + message);
+        // System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
 
         // These messages are just for testing at the moment
         switch (getValidMessageType(args)) {
             case LB_SHUTDOWN:
-                System.out.println("[INFO] processMessage received 'LB_SHUTDOWN'");
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
                 System.exit(0);
                 break;
             case CLIENT_REGISTER:
-                System.out.println("[INFO] processMessage received 'CLIENT_REGISTER'");
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
 
                 clientIP = getValidStringArg(args, I_CLIENT_IP);
                 clientPort = getValidIntArg(args, I_CLIENT_PORT);
@@ -118,7 +129,8 @@ public class LoadBalancer {
                 messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
                 break;
             case NODE_REGISTER:
-                System.out.println("[INFO] processMessage received 'NODE_REGISTER'");
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
 
                 String nodeIP = getValidStringArg(args, I_NODE_IP);
                 int nodePort = getValidIntArg(args, I_NODE_PORT);
@@ -135,7 +147,8 @@ public class LoadBalancer {
                 // messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
                 break;
             case NEW_JOB:
-                System.out.println("[INFO] processMessage received 'NEW_JOB'");
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
 
                 int jobDuration = getValidIntArg(args, I_JOB_DURATION);
 
@@ -143,7 +156,8 @@ public class LoadBalancer {
 
                 break;
             default:
-                System.out.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
+                System.out.println("===============================================================================");
+                System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
         }
     }
 
