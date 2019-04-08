@@ -72,13 +72,21 @@ public class JobManager {
     }
 
     /**
-     * Fetch the next unallocated job from the jobs LinkedHashMap.
+     * Fetch the next queued job from the jobs LinkedHashMap.
      *
-     * @return The next unallocated job as a Job
+     * @return The next queued job as a Job object
      */
-    // TODO: Mark as BEING_ALLOCATED to prevent two threads from trying to allocate?
-    // TODO: Untested
     public Job getNextJob() {
+        // Iterate through the jobs LinkedHashMap to find the next job with status 'jobs', once found
+        // set the status to 'IN_PROGRESS'
+        for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getValue() == JobStatus.QUEUED) {
+                jobDetails.setValue(JobStatus.IN_PROGRESS);
+
+                return jobDetails.getKey();
+            }
+        }
+
         return null;
     }
 

@@ -1,6 +1,7 @@
 package io.grimlock257.dnaos.node;
 
 import io.grimlock257.dnaos.node.job.Job;
+import io.grimlock257.dnaos.node.job.JobStatus;
 import io.grimlock257.dnaos.node.managers.JobManager;
 import io.grimlock257.dnaos.node.managers.MessageManager;
 import io.grimlock257.dnaos.node.message.MessageType;
@@ -95,6 +96,32 @@ public class Node {
             if (nextMessage != "") {
                 processMessage(nextMessage);
             }
+
+            // TODO: Capacity check? Shouldn't be required as Load Balancer shouldn't send more jobs than capacity
+            // Process a job (if available)
+            Job nextJob = jobManager.getNextJob();
+
+            if (nextJob != null) {
+                // A new thread is created for each job to be ran
+                Thread jobProcessing = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Process the job
+                        processJob(nextJob);
+
+                        // Send the complete job back to the Load Balancer
+                        try {
+                            MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getDuration(), addr, lbPort);
+                            JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
+                        } catch (IOException e) {
+                            System.err.println("[ERROR] An IO error occurred sending the complete job back to the Load Balancer");
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                jobProcessing.start();
+            }
         }
     }
 
@@ -128,6 +155,30 @@ public class Node {
                 System.out.println("===============================================================================");
                 System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
         }
+    }
+
+    /**
+     * Process the passed in job
+     *
+     * @param job The job to be processed
+     */
+    private void processJob(Job job) {
+        System.out.println("===============================================================================");
+        System.out.println("[INFO] Processing job '" + job.toString() + "'");
+
+        // Try sleep for the job duration
+        try {
+            Thread.sleep(job.getDuration() * 1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Update the job status to COMPLETE and send the job back to the Load Balancer
+        JobManager.getInstance().updateJobStatus(job, JobStatus.COMPLETE);
+
+        System.out.println("===============================================================================");
+        System.out.println("[INFO] Job '" + job.getDuration() + "' complete");
+        System.out.println(JobManager.getInstance().toString());
     }
 
     /**
