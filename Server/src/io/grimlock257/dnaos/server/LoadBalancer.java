@@ -89,11 +89,24 @@ public class LoadBalancer {
                 processMessage(nextMessage);
             }
 
-            // Try allocate a job
-            // TODO: Thread this
-            // Node freestNode = nodeManager.getFreestNode();
-            // Job nextJob = jobManager.getNextJob();
-            // jobManager.allocateJob(nextJob, freestNode);
+            // Allocate a job (if available)
+            // TODO: Thread this?
+            Node freestNode = nodeManager.getFreestNode();
+
+            if (freestNode != null) {
+                Job nextJob = jobManager.getNextJob();
+
+                if (nextJob != null) {
+                    System.out.println("===============================================================================");
+                    System.out.println("[INFO] Job allocation taking place for '" + nextJob.toString() + "' to node '" + freestNode.getName() + "'");
+
+                    jobManager.allocateJob(nextJob, freestNode);
+
+                    messageManager.send(MessageType.NEW_JOB.toString() + "," + nextJob.getDuration(), freestNode.getAddr(), freestNode.getPort());
+
+                    System.out.println("[INFO] Node utilization is now " + freestNode.calcUsage() + "% (max capacity is " + freestNode.getCapacity() + ")");
+                }
+            }
         }
     }
 

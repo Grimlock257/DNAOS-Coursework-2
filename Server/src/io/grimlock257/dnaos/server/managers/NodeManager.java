@@ -59,6 +59,25 @@ public class NodeManager {
     }
 
     /**
+     * Work out which Node is the most free by calculating the current usage of each Node
+     *
+     * @return The freest Node
+     */
+    public Node getFreestNode() {
+        Node freestNode = null;
+
+        for (Node node : nodes) {
+            if (freestNode == null) {
+                freestNode = node;
+            } else if (node.calcUsage() < freestNode.calcUsage()) {
+                freestNode = node;
+            }
+        }
+
+        return freestNode;
+    }
+
+    /**
      * Used to display the nodes LinkedList in a nice, readable format
      *
      * @return The formatted string

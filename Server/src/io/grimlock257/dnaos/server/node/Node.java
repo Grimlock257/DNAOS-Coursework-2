@@ -1,5 +1,7 @@
 package io.grimlock257.dnaos.server.node;
 
+import io.grimlock257.dnaos.server.managers.JobManager;
+
 import java.net.InetAddress;
 
 /**
@@ -60,15 +62,13 @@ public class Node {
         return name;
     }
 
-    // TODO
-
     /**
      * Calculates the usage of the node, based on the capacity of the node and the currently allocated jobs
      *
      * @return The calculated percentage usage of the node
      */
     public double calcUsage() {
-        return 0.0;
+        return (JobManager.getInstance().getAmountOfNodeJobs(this) / (double) capacity) * 100;
     }
 
     /**

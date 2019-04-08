@@ -9,6 +9,7 @@ package io.grimlock257.dnaos.server.job;
  */
 public enum JobStatus {
     UNALLOCATED,
+    BEING_ALLOCATED,
     ALLOCATED,
     COMPLETE,
     SENT

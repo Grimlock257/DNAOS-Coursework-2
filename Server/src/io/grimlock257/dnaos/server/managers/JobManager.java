@@ -68,9 +68,20 @@ public class JobManager {
      * @param job  The job that is being allocated
      * @param node The node which is being allocated the job
      */
-    // TODO: Untested
     public void allocateJob(Job job, Node node) {
+        // Iterate through the jobs LinkedHashMap to find the supplied job
+        for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.BEING_ALLOCATED) {
+                jobDetails.getValue().setJobStatus(JobStatus.ALLOCATED);
+                jobDetails.getValue().setNode(node);
 
+                System.out.println("[INFO] Job '" + job.toString() + "' been allocated to " + node.getName());
+            } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.ALLOCATED) {
+                System.out.println("[ERROR] Job '" + job.toString() + "' has already been allocated");
+            } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.UNALLOCATED) {
+                System.out.println("[ERROR] Job '" + job.toString() + "' is not ready to be allocated yet");
+            }
+        }
     }
 
     /**
@@ -88,11 +99,19 @@ public class JobManager {
     /**
      * Fetch the next unallocated job from the jobs LinkedHashMap.
      *
-     * @return The next unallocated job as a Job
+     * @return The next unallocated job as a Job object
      */
-    // TODO: Mark as BEING_ALLOCATED to prevent two threads from trying to allocate?
-    // TODO: Untested
     public Job getNextJob() {
+        // Iterate through the jobs LinkedHashMap to find the next job with status 'UNALLOCATED', once found
+        // set the status to 'BEING_ALLOCATED' (to prevent two threads from trying to allocate the job).
+        for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getValue().getJobStatus() == JobStatus.UNALLOCATED) {
+                jobDetails.getValue().setJobStatus(JobStatus.BEING_ALLOCATED);
+
+                return jobDetails.getKey();
+            }
+        }
+
         return null;
     }
 
@@ -105,6 +124,26 @@ public class JobManager {
     // TODO: Untested
     public LinkedHashMap<Job, JobAlloc> getNodeJobs(Node node) {
         return null;
+    }
+
+    /**
+     * Get the number of jobs that are currently allocated to a Node
+     *
+     * @param node The node whose jobs to tally
+     * @return The number of jobs allocated to the specified Node
+     */
+    public int getAmountOfNodeJobs(Node node) {
+        int amountOfJobs = 0;
+
+        // Iterate through the jobs LinkedHashMap and see if the job had an allocated node, and if so, if that
+        // node is the same as the supplied node
+        for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getValue().getNode() != null && jobDetails.getValue().getNode().equals(node)) {
+                amountOfJobs++;
+            }
+        }
+
+        return amountOfJobs;
     }
 
     /**
