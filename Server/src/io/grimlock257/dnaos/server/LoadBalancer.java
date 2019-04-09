@@ -9,6 +9,7 @@ import io.grimlock257.dnaos.server.message.MessageType;
 import io.grimlock257.dnaos.server.node.Node;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
@@ -69,11 +70,22 @@ public class LoadBalancer {
             jobManager = JobManager.getInstance();
 
             loop();
+        } catch (BindException e) {
+            if (e.getMessage().toLowerCase().contains("address already in use")) {
+                System.err.println("[ERROR] Port " + port + " is already in use, please select another port via the command line arguments");
+                System.err.println("[ERROR] Usage: java loadbalancer <port>");
+            } else {
+                System.err.println("[ERROR]");
+                e.printStackTrace();
+            }
         } catch (Exception e) {
+            System.err.println("[ERROR]");
             e.printStackTrace();
         } finally {
-            // Try / Catch?
-            socket.close();
+            try {
+                socket.close();
+            } catch (NullPointerException ignored) {
+            }
         }
     }
 
