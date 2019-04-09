@@ -127,18 +127,19 @@ public class JobManager {
     }
 
     /**
-     * Get the number of jobs that are currently allocated to a Node
+     * Get the number of jobs that are currently allocated and in progress with a Node
      *
-     * @param node The node whose jobs to tally
+     * @param node The node whose active jobs to tally
      * @return The number of jobs allocated to the specified Node
      */
-    public int getAmountOfNodeJobs(Node node) {
+    public int getAmountOfActiveNodeJobs(Node node) {
         int amountOfJobs = 0;
 
         // Iterate through the jobs LinkedHashMap and see if the job had an allocated node, and if so, if that
         // node is the same as the supplied node
         for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
-            if (jobDetails.getValue().getNode() != null && jobDetails.getValue().getNode().equals(node)) {
+            // Check: Node is not null && parameter node == iteration node && JobStatus of iteration job is ALLOCATED
+            if (jobDetails.getValue().getNode() != null && jobDetails.getValue().getNode().equals(node) && jobDetails.getValue().getJobStatus() == JobStatus.ALLOCATED) {
                 amountOfJobs++;
             }
         }

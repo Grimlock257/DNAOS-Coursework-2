@@ -68,7 +68,7 @@ public class Node {
      * @return The calculated percentage usage of the node
      */
     public double calcUsage() {
-        return (JobManager.getInstance().getAmountOfNodeJobs(this) / (double) capacity) * 100;
+        return (JobManager.getInstance().getAmountOfActiveNodeJobs(this) / (double) capacity) * 100;
     }
 
     /**
