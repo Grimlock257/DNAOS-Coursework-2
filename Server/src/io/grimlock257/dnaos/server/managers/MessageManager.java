@@ -110,8 +110,6 @@ public class MessageManager {
         // Lock the messagesLock so that only one thread may access the messages LinkedList at any one time
         synchronized (messageLock) {
             messages.add(message);
-
-            // System.err.println("ADD: " + this.getMessages().toString());
         }
     }
 
@@ -145,8 +143,6 @@ public class MessageManager {
                         getMessages().set(i, new HashMap<String, Boolean>() {{
                             put(message.keySet().toArray()[0].toString(), true);
                         }});
-
-                        // System.err.println("ALT: " + this.getMessages().toString());
 
                         return message.keySet().toArray()[0].toString();
                     }

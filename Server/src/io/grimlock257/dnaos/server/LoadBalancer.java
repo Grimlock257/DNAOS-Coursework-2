@@ -132,10 +132,6 @@ public class LoadBalancer {
      * @param message The message to analyse
      * @throws IOException
      */
-    // Message structure: command, args0, args1, ..., args2
-    // E.g: REGISTER, 192.168.1.15
-    // TODO: Enum or Message packaging containing Message subclasses (i.e MessageRegister, MessageResign etc.)
-    // Messages: Node Register, Node Resign, New Job (client -> lb), New Job (lb -> node), Complete job (node -> lb), Complete Job (lb -> client), LB shutdown, Node shutdown
     public void processMessage(String message) throws IOException {
         // System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
@@ -171,9 +167,6 @@ public class LoadBalancer {
 
                 messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
 
-                // TODO: Remove - temporary testing
-                // messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
-                // messageManager.send(MessageType.NEW_JOB.toString() + ",10", nodeAddr, nodePort);
                 break;
             case NEW_JOB:
                 System.out.println("===============================================================================");
@@ -235,7 +228,6 @@ public class LoadBalancer {
      * @param pos  The element to validate
      * @return The trimmed string or "" if invalid or null
      */
-    // TODO: toUpperCase()? UPDATE
     public String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
             return (args[pos] != null) ? args[pos].trim() : "";
@@ -251,6 +243,7 @@ public class LoadBalancer {
      * @param pos  The element to validate
      * @return The parsed integer or -1 if invalid or null
      */
+    // TODO: Handle -1 outputs from this method
     public int getValidIntArg(String[] args, int pos) {
         if (args.length > pos && args[pos] != null) {
             try {

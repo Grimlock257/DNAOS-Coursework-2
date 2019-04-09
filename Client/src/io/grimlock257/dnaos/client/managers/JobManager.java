@@ -68,20 +68,8 @@ public class JobManager {
      * @param job       The job that has the JobStatus to be updated
      * @param newStatus The new status of the job
      */
-    // TODO: Untested
     public void updateJobStatus(Job job, JobStatus newStatus) {
         this.jobs.replace(job, newStatus);
-    }
-
-    /**
-     * Fetch the next unallocated job from the jobs LinkedHashMap.
-     *
-     * @return The next unallocated job as a Job
-     */
-    // TODO: Mark as BEING_ALLOCATED to prevent two threads from trying to allocate?
-    // TODO: Untested
-    public Job getNextJob() {
-        return null;
     }
 
     /**
@@ -105,7 +93,6 @@ public class JobManager {
      *
      * @return The formatted string
      */
-    // TODO: Untested
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

@@ -121,7 +121,6 @@ public class Client {
 
             String nextMessage = messageManager.getNextMessage();
 
-            // TODO: Related to TODO: Causing block - thread the processMessage();
             if (nextMessage != "") {
                 processMessage(nextMessage);
             }
@@ -179,11 +178,11 @@ public class Client {
         try {
             System.out.println("Enter job name:");
             System.out.print("> ");
-            String jobName = keyboard.readLine(); // TODO: Causing block TODO: Validation // TODO: Duplicate check
+            String jobName = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
 
             System.out.println("Enter job duration:");
             System.out.print("> ");
-            int jobDuration = Integer.parseInt(keyboard.readLine()); // TODO: Causing block
+            int jobDuration = Integer.parseInt(keyboard.readLine());
 
             jobManager.addJob(new Job(jobName, jobDuration));
 
@@ -220,7 +219,6 @@ public class Client {
      * @param pos  The element to validate
      * @return The trimmed string or "" if invalid or null
      */
-    // TODO: toUpperCase()? UPDATE
     public String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
             return (args[pos] != null) ? args[pos].trim() : "";

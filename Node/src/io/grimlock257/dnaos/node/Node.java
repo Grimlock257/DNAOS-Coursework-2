@@ -223,7 +223,6 @@ public class Node {
      * @param pos  The element to validate
      * @return The trimmed string or "" if invalid or null
      */
-    // TODO: toUpperCase()? UPDATE
     public String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
             return (args[pos] != null) ? args[pos].trim() : "";

@@ -90,10 +90,8 @@ public class JobManager {
      * @param job       The job that has the JobStatus to be updated
      * @param newStatus The new status of the job
      */
-    // TODO: Untested
     public void updateJobStatus(Job job, JobStatus newStatus) {
         this.jobs.get(job).setJobStatus(newStatus);
-        //this.jobs.replace(job, newStatus);
     }
 
     /**
