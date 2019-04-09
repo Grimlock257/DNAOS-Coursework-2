@@ -168,6 +168,10 @@ public class LoadBalancer {
                 jobManager.addJob(new Job(jobDuration));
 
                 break;
+            case COMPLETE_JOB:
+                System.out.println("===============================================================================");
+                System.out.println("[INFO] processMessage received '" + message + "'");
+                break;
             default:
                 System.out.println("===============================================================================");
                 System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
