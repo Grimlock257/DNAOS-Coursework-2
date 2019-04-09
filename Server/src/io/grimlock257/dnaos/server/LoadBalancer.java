@@ -1,6 +1,7 @@
 package io.grimlock257.dnaos.server;
 
 import io.grimlock257.dnaos.server.job.Job;
+import io.grimlock257.dnaos.server.job.JobStatus;
 import io.grimlock257.dnaos.server.managers.JobManager;
 import io.grimlock257.dnaos.server.managers.MessageManager;
 import io.grimlock257.dnaos.server.managers.NodeManager;
@@ -178,9 +179,17 @@ public class LoadBalancer {
 
                 String completedJobName = getValidStringArg(args, I_COMPLETE_JOB_NAME);
 
-                // jobManager.updateJobStatus();
+                Job completedJob = jobManager.findByName(completedJobName);
+
+                System.out.println("[INFO] Job '" + completedJob.getName() + "' has been completed");
+
+                jobManager.updateJobStatus(completedJob, JobStatus.SENT);
 
                 messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
+
+                // Temporary
+                System.out.println("[INFO] Job '" + completedJob.getName() + "' has been sent to the client");
+                System.out.println("[INFO] Job List:\n" + jobManager.toString());
 
                 break;
             default:
