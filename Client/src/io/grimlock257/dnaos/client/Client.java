@@ -84,13 +84,19 @@ public class Client {
         while (true) {
             if (connected) {
                 System.out.println("===============================================================================");
-                System.out.print("> ");
 
                 try {
-                    int jobDuration = Integer.parseInt(keyboard.readLine()); // TODO: Causing block
-                    jobManager.addJob(new Job(jobDuration));
+                    System.out.println("Enter job name:");
+                    System.out.print("> ");
+                    String jobName = keyboard.readLine(); // TODO: Causing block TODO: Validation // TODO: Duplicate check
 
-                    messageManager.send(MessageType.NEW_JOB.toString() + "," + jobDuration, addr, lbPort);
+                    System.out.println("Enter job duration:");
+                    System.out.print("> ");
+                    int jobDuration = Integer.parseInt(keyboard.readLine()); // TODO: Causing block
+
+                    jobManager.addJob(new Job(jobName, jobDuration));
+
+                    messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, addr, lbPort);
                 } catch (NumberFormatException e) {
                     System.out.println("[INPUT ERROR] Please enter an integer only");
                 } catch (Exception e) {

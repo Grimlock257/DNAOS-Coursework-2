@@ -75,11 +75,11 @@ public class JobManager {
                 jobDetails.getValue().setJobStatus(JobStatus.ALLOCATED);
                 jobDetails.getValue().setNode(node);
 
-                System.out.println("[INFO] Job '" + job.toString() + "' been allocated to " + node.getName());
+                System.out.println("[INFO] Job '" + job.getName() + "' been allocated to " + node.getName());
             } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.ALLOCATED) {
-                System.out.println("[ERROR] Job '" + job.toString() + "' has already been allocated");
+                System.out.println("[ERROR] Job '" + job.getName() + "' has already been allocated");
             } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.UNALLOCATED) {
-                System.out.println("[ERROR] Job '" + job.toString() + "' is not ready to be allocated yet");
+                System.out.println("[ERROR] Job '" + job.getName() + "' is not ready to be allocated yet");
             }
         }
     }

@@ -27,7 +27,8 @@ public class LoadBalancer {
     private final int I_NODE_PORT = 2;
     private final int I_NODE_NAME = 3;
     private final int I_NODE_CAP = 4;
-    private final int I_JOB_DURATION = 1;
+    private final int I_JOB_NAME = 1;
+    private final int I_JOB_DURATION = 2;
 
     // TODO: Temp - need Client representation class
     private String clientIP;
@@ -98,11 +99,11 @@ public class LoadBalancer {
 
                 if (nextJob != null) {
                     System.out.println("===============================================================================");
-                    System.out.println("[INFO] Job allocation taking place for '" + nextJob.toString() + "' to node '" + freestNode.getName() + "'");
+                    System.out.println("[INFO] Job allocation taking place for '" + nextJob.getName() + "' to node '" + freestNode.getName() + "'");
 
                     jobManager.allocateJob(nextJob, freestNode);
 
-                    messageManager.send(MessageType.NEW_JOB.toString() + "," + nextJob.getDuration(), freestNode.getAddr(), freestNode.getPort());
+                    messageManager.send(MessageType.NEW_JOB.toString() + "," + nextJob.getName() + "," + nextJob.getDuration(), freestNode.getAddr(), freestNode.getPort());
 
                     System.out.println("[INFO] Node utilization is now " + freestNode.calcUsage() + "% (max capacity is " + freestNode.getCapacity() + ")");
                 }
@@ -163,9 +164,10 @@ public class LoadBalancer {
                 System.out.println("===============================================================================");
                 System.out.println("[INFO] processMessage received '" + message + "'");
 
+                String jobName = getValidStringArg(args, I_JOB_NAME);
                 int jobDuration = getValidIntArg(args, I_JOB_DURATION);
 
-                jobManager.addJob(new Job(jobDuration));
+                jobManager.addJob(new Job(jobName, jobDuration));
 
                 break;
             case COMPLETE_JOB:

@@ -21,7 +21,8 @@ import java.net.InetAddress;
 public class Node {
     // Constants storing indexes for information within a message
     private final int I_MESSAGE_TYPE = 0;
-    private final int I_JOB_DURATION = 1;
+    private final int I_JOB_NAME = 1;
+    private final int I_JOB_DURATION = 2;
 
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
@@ -111,7 +112,7 @@ public class Node {
 
                         // Send the complete job back to the Load Balancer
                         try {
-                            MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getDuration(), addr, lbPort);
+                            MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getName(), addr, lbPort);
                             JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
                         } catch (IOException e) {
                             System.err.println("[ERROR] An IO error occurred sending the complete job back to the Load Balancer");
@@ -146,9 +147,10 @@ public class Node {
                 System.out.println("===============================================================================");
                 System.out.println("[INFO] processMessage received '" + message + "'");
 
+                String jobName = getValidStringArg(args, I_JOB_NAME);
                 int jobDuration = getValidIntArg(args, I_JOB_DURATION);
 
-                jobManager.addJob(new Job(jobDuration));
+                jobManager.addJob(new Job(jobName, jobDuration));
 
                 break;
             default:
@@ -164,7 +166,7 @@ public class Node {
      */
     private void processJob(Job job) {
         System.out.println("===============================================================================");
-        System.out.println("[INFO] Processing job '" + job.toString() + "'");
+        System.out.println("[INFO] Processing job '" + job.getName() + "'");
 
         // Try sleep for the job duration
         try {
@@ -177,7 +179,7 @@ public class Node {
         JobManager.getInstance().updateJobStatus(job, JobStatus.COMPLETE);
 
         System.out.println("===============================================================================");
-        System.out.println("[INFO] Job '" + job.getDuration() + "' complete");
+        System.out.println("[INFO] Job '" + job.getName() + "' complete");
         System.out.println(JobManager.getInstance().toString());
     }
 

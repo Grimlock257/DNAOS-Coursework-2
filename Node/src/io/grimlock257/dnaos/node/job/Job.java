@@ -8,6 +8,7 @@ package io.grimlock257.dnaos.node.job;
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
 public class Job {
+    private String name;
     private int duration;
 
     /**
@@ -15,8 +16,16 @@ public class Job {
      *
      * @param duration The duration of the job
      */
-    public Job(int duration) {
+    public Job(String name, int duration) {
+        this.name = name;
         this.duration = duration;
+    }
+
+    /**
+     * @return The name of the job
+     */
+    public String getName() {
+        return this.name;
     }
 
     /**
@@ -31,6 +40,6 @@ public class Job {
      */
     @Override
     public String toString() {
-        return "Duration: " + duration;
+        return "Name: " + name + ", Duration: " + duration;
     }
 }
