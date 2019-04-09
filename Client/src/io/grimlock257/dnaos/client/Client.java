@@ -26,10 +26,12 @@ public class Client {
 
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
+    private boolean hasBeganUserInputThread = false; // TODO: Better method of implementing this
 
     private int clientPort;
     private String lbHost;
     private int lbPort;
+    private InetAddress lbAddr;
     private DatagramSocket socket;
 
     private MessageManager messageManager;
@@ -76,35 +78,27 @@ public class Client {
      * @throws IOException When keyboard input can not be retrieved
      */
     private void loop() throws IOException {
-        // Temporarily get input from the keyboard until the initiator/client program is complete
-        InputStreamReader input = new InputStreamReader(System.in);
-        BufferedReader keyboard = new BufferedReader(input);
-        InetAddress addr = InetAddress.getByName(lbHost);
+        lbAddr = InetAddress.getByName(lbHost);
 
         while (true) {
-            if (connected) {
-                System.out.println("===============================================================================");
+            if (connected && !hasBeganUserInputThread) {
+                // A new thread is created for each job to be ran
+                Thread userInput = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Get input from the user forever
+                        while (true) {
+                            getUserInput();
+                        }
+                    }
+                });
 
-                try {
-                    System.out.println("Enter job name:");
-                    System.out.print("> ");
-                    String jobName = keyboard.readLine(); // TODO: Causing block TODO: Validation // TODO: Duplicate check
+                userInput.start();
 
-                    System.out.println("Enter job duration:");
-                    System.out.print("> ");
-                    int jobDuration = Integer.parseInt(keyboard.readLine()); // TODO: Causing block
-
-                    jobManager.addJob(new Job(jobName, jobDuration));
-
-                    messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, addr, lbPort);
-                } catch (NumberFormatException e) {
-                    System.out.println("[INPUT ERROR] Please enter an integer only");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                hasBeganUserInputThread = true;
             } else if (!hasSentRegister) {
                 System.out.println("Connecting to load balancer...");
-                messageManager.send(MessageType.CLIENT_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.clientPort, addr, lbPort);
+                messageManager.send(MessageType.CLIENT_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.clientPort, lbAddr, lbPort);
                 hasSentRegister = true;
             }
 
@@ -144,6 +138,35 @@ public class Client {
             default:
                 System.out.println("===============================================================================");
                 System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
+        }
+    }
+
+    /**
+     * Get input from the user search as the command they want to issue, and any required arguments
+     */
+    private void getUserInput() {
+        InputStreamReader input = new InputStreamReader(System.in);
+        BufferedReader keyboard = new BufferedReader(input);
+
+        System.out.println("===============================================================================");
+
+        // Create a new job
+        try {
+            System.out.println("Enter job name:");
+            System.out.print("> ");
+            String jobName = keyboard.readLine(); // TODO: Causing block TODO: Validation // TODO: Duplicate check
+
+            System.out.println("Enter job duration:");
+            System.out.print("> ");
+            int jobDuration = Integer.parseInt(keyboard.readLine()); // TODO: Causing block
+
+            jobManager.addJob(new Job(jobName, jobDuration));
+
+            messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
+        } catch (NumberFormatException e) {
+            System.out.println("[INPUT ERROR] Please enter an integer only");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

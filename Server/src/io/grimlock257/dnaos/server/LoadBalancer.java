@@ -29,10 +29,12 @@ public class LoadBalancer {
     private final int I_NODE_CAP = 4;
     private final int I_JOB_NAME = 1;
     private final int I_JOB_DURATION = 2;
+    private final int I_COMPLETE_JOB_NAME = 1;
 
     // TODO: Temp - need Client representation class
     private String clientIP;
     private int clientPort;
+    private InetAddress clientAddr;
 
     private int port = 0;
     private DatagramSocket socket;
@@ -138,7 +140,7 @@ public class LoadBalancer {
 
                 clientIP = getValidStringArg(args, I_CLIENT_IP);
                 clientPort = getValidIntArg(args, I_CLIENT_PORT);
-                InetAddress clientAddr = InetAddress.getByName(clientIP);
+                clientAddr = InetAddress.getByName(clientIP);
 
                 messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
                 break;
@@ -173,6 +175,13 @@ public class LoadBalancer {
             case COMPLETE_JOB:
                 System.out.println("===============================================================================");
                 System.out.println("[INFO] processMessage received '" + message + "'");
+
+                String completedJobName = getValidStringArg(args, I_COMPLETE_JOB_NAME);
+
+                // jobManager.updateJobStatus();
+
+                messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
+
                 break;
             default:
                 System.out.println("===============================================================================");
