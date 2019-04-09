@@ -1,6 +1,7 @@
 package io.grimlock257.dnaos.client;
 
 import io.grimlock257.dnaos.client.job.Job;
+import io.grimlock257.dnaos.client.job.JobStatus;
 import io.grimlock257.dnaos.client.managers.JobManager;
 import io.grimlock257.dnaos.client.managers.MessageManager;
 import io.grimlock257.dnaos.client.message.MessageType;
@@ -22,7 +23,8 @@ import java.net.InetAddress;
 public class Client {
     // Constants storing indexes for information within a message
     private final int I_MESSAGE_TYPE = 0;
-    private final int I_JOB_DURATION = 1;
+    // private final int I_JOB_DURATION = 1;
+    private final int I_COMPLETE_JOB_NAME = 1;
 
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
@@ -132,7 +134,15 @@ public class Client {
                 System.out.println("===============================================================================");
                 System.out.println("[INFO] processMessage received '" + message + "'");
 
-                // TODO: Retrieve the Job that has been completed from the message and update JobStatus of the Job within the JobManager
+                String jobName = getValidStringArg(args, I_COMPLETE_JOB_NAME);
+
+                Job completedJob = jobManager.findByName(jobName);
+
+                jobManager.updateJobStatus(completedJob, JobStatus.COMPLETE);
+
+                // Temporary
+                System.out.println("[INFO] Job '" + completedJob.getName() + "' has been completed");
+                System.out.println("[INFO] Client Job List:\n" + jobManager.toString());
 
                 break;
             default:
