@@ -11,7 +11,7 @@ import java.util.LinkedList;
 /**
  * Message Manager for Node project
  * This class handles the sending and receiving of messages via UDP packets
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -61,7 +61,8 @@ public class MessageManager {
      * @param message The message to be sent
      * @param address The address to send the packet to
      * @param port    The port to sent the packet to
-     * @throws IOException When keyboard input can not be retrieved
+     *
+     * @throws IOException When the packet cannot be sent via the UDP socket
      */
     public void send(String message, InetAddress address, int port) throws IOException {
         DatagramPacket packet = new DatagramPacket(message.getBytes(), message.getBytes().length, address, port);
@@ -69,24 +70,26 @@ public class MessageManager {
     }
 
     /**
-     * Creates a thread that receives a message from an incoming UDP packet
+     * Creates a thread that receives messages as incoming UDP packets
      * If a packet is received, add the contents of the packet to the messages LinkedList
      */
     private void receive() {
-        // Create a new thread to receive the incoming packet so that Node isn't blocked completely while waiting for a response
+        // Create a new thread to receive the incoming packet so that Node isn't blocked completely while waiting for a message
         Thread receive = new Thread("node_receive_thread") {
             public void run() {
                 while (true) {
+                    // Byte buffer to store the message
                     byte[] buffer = new byte[2048];
 
+                    // Try receive the packet from the socket into the byte array
                     try {
                         socket.receive(new DatagramPacket(buffer, buffer.length));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
 
+                    // Store the message into the LinkedList of messages, assuming the message length isn't 0
                     String message = new String(buffer);
-
                     if (message.length() > 0) {
                         HashMap<String, Boolean> newMsg = new HashMap<String, Boolean>() {{
                             put(message, false);
@@ -110,8 +113,6 @@ public class MessageManager {
         // Lock the messagesLock so that only one thread may access the messages LinkedList at any one time
         synchronized (messageLock) {
             messages.add(message);
-
-            System.err.println("ADD: " + this.getMessages().toString());
         }
     }
 
@@ -146,8 +147,6 @@ public class MessageManager {
                             put(message.keySet().toArray()[0].toString(), true);
                         }});
 
-                        System.err.println("ALT: " + this.getMessages().toString());
-
                         return message.keySet().toArray()[0].toString();
                     }
                 }
@@ -156,6 +155,6 @@ public class MessageManager {
             e.printStackTrace();
         }
 
-        return "";
+        return null;
     }
 }

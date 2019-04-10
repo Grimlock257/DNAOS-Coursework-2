@@ -1,8 +1,8 @@
 package io.grimlock257.dnaos.client.job;
 
 /**
- * Represents a Job within the Client package
- * <p>
+ * Represents a Job within the Client project
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -12,8 +12,9 @@ public class Job {
     private int duration;
 
     /**
-     * Job constructor
+     * Create a new job with the supplied name and duration
      *
+     * @param name     The name of the job
      * @param duration The duration of the job
      */
     public Job(String name, int duration) {

@@ -5,7 +5,7 @@ import java.net.UnknownHostException;
 
 /**
  * Main class of Node project
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 public class Main {
     /**
      * Entry port for the program.
-     * <p>
+     *
      * Takes in command line arguments and uses them to initialise a nonstatic instance of the Node
      *
      * @param args The command line arguments supplied
@@ -27,24 +27,29 @@ public class Main {
             String lbHost = args[3];
             int lbPort = Integer.parseInt(args[4]);
 
+            InetAddress addr = null;
+            try {
+                addr = InetAddress.getByName("localhost");
+            } catch (UnknownHostException e) {
+                System.err.println("[ERROR] UnknownHostException thrown, exiting...");
+                e.printStackTrace();
+                System.exit(1);
+            }
+
             // Display information about the Node
             System.out.println("[INFO] Node online");
             System.out.println("[INFO] Node details:");
             System.out.println("[INFO] - Name: " + name);
             System.out.println("[INFO] - Capacity: " + capacity);
-            try {
-                System.out.println("[INFO] - IP: " + InetAddress.getByName("localhost"));
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
+            System.out.println("[INFO] - IP: " + addr);
             System.out.println("[INFO] - Port: " + port);
             System.out.println("[INFO] - Load Balancer IP: " + lbHost);
             System.out.println("[INFO] - Load Balancer Port: " + lbPort);
-            System.out.println("===============================================================================\n\n");
+            System.out.println("===============================================================================");
 
             new Node(name, capacity, port, lbHost, lbPort);
         } else {
-            System.err.println("Invalid arguments supplied! Usage: <name> <capacity> <port> <load balancer host address> <load balancer port>");
+            System.err.println("[ERROR] Invalid arguments supplied! Usage: java node <name> <capacity> <port> <load balancer host address> <load balancer port>");
         }
     }
 }

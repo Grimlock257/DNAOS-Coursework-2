@@ -5,7 +5,7 @@ import java.net.UnknownHostException;
 
 /**
  * Main class of Client project
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 public class Main {
     /**
      * Entry port for the program.
-     * <p>
+     *
      * Takes in command line arguments and uses them to initialise a nonstatic instance of the Client
      *
      * @param args The command line arguments supplied
@@ -25,22 +25,27 @@ public class Main {
             String lbHost = args[1];
             int lbPort = Integer.parseInt(args[2]);
 
+            InetAddress addr = null;
+            try {
+                addr = InetAddress.getByName("localhost");
+            } catch (UnknownHostException e) {
+                System.err.println("[ERROR] UnknownHostException thrown, exiting...");
+                e.printStackTrace();
+                System.exit(1);
+            }
+
+            // Display information about the Client
             System.out.println("[INFO] Client online");
             System.out.println("[INFO] Client details:");
-            try {
-                System.out.println("[INFO] - IP: " + InetAddress.getByName("localhost"));
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
+            System.out.println("[INFO] - IP: " + addr);
             System.out.println("[INFO] - Port: " + port);
             System.out.println("[INFO] - Load Balancer IP: " + lbHost);
             System.out.println("[INFO] - Load Balancer Port: " + lbPort);
-            System.out.println("===============================================================================\n\n");
-
+            System.out.println("===============================================================================");
 
             new Client(port, lbHost, lbPort);
         } else {
-            System.err.println("Invalid arguments supplied! Usage: <port> <load balancer host address> <load balancer port>");
+            System.err.println("[ERROR] Invalid arguments supplied! Usage: java client <port> <load balancer host address> <load balancer port>");
         }
     }
 }

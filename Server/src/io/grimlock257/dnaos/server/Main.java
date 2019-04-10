@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 public class Main {
     /**
      * Entry port for the program.
-     * <p>
+     *
      * Takes in command line arguments and uses them to initialise a nonstatic instance of the Load Balancer
      *
      * @param args The command line arguments supplied
@@ -23,20 +23,25 @@ public class Main {
             // Get parameters from the supplied command line arguments
             int port = Integer.parseInt(args[0]);
 
+            InetAddress addr = null;
+            try {
+                addr = InetAddress.getByName("localhost");
+            } catch (UnknownHostException e) {
+                System.err.println("[ERROR] UnknownHostException thrown, exiting...");
+                e.printStackTrace();
+                System.exit(1);
+            }
+
             // Display information about the Load Balancer
             System.out.println("[INFO] LoadBalancer online");
             System.out.println("[INFO] LoadBalancer details:");
-            try {
-                System.out.println("[INFO] - IP: " + InetAddress.getByName("localhost"));
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
+            System.out.println("[INFO] - IP: " + addr);
             System.out.println("[INFO] - Port: " + port);
-            System.out.println("===============================================================================\n\n");
+            System.out.println("===============================================================================");
 
             new LoadBalancer(port);
         } else {
-            System.err.println("Invalid arguments supplied! Usage: <port>");
+            System.err.println("[ERROR] Invalid arguments supplied! Usage: java loadbalancer <port>");
         }
     }
 }

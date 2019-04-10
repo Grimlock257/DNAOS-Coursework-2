@@ -5,9 +5,9 @@ import io.grimlock257.dnaos.server.managers.JobManager;
 import java.net.InetAddress;
 
 /**
- * Represent the Node in the Server project
+ * Represent the Node in the Load Balancer project
  * This class represents a nodes properties for use within the server project
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2

@@ -2,7 +2,7 @@ package io.grimlock257.dnaos.node.message;
 
 /**
  * Enum of valid types of message from the Node point of view
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2

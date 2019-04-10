@@ -9,9 +9,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Job Manager for Server project
+ * Job Manager for Load Balancer project
  * This class handles the storage of jobs and the allocation of jobs to nodes
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -48,8 +48,6 @@ public class JobManager {
      */
     public void addJob(Job job) {
         this.jobs.put(job, new JobAlloc(null, JobStatus.UNALLOCATED));
-
-        System.out.println("[DEBUG] Jobs list: \n" + this.toString());
     }
 
     /**
@@ -75,7 +73,7 @@ public class JobManager {
                 jobDetails.getValue().setJobStatus(JobStatus.ALLOCATED);
                 jobDetails.getValue().setNode(node);
 
-                System.out.println("[INFO] Job '" + job.getName() + "' been allocated to " + node.getName());
+                System.out.println("[INFO] Job '" + job.getName() + "' been allocated to '" + node.getName() + "'");
             } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.ALLOCATED) {
                 System.out.println("[ERROR] Job '" + job.getName() + "' has already been allocated");
             } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.UNALLOCATED) {
@@ -117,6 +115,7 @@ public class JobManager {
      * Fetch all the jobs that are currently allocated to a Node
      *
      * @param node The node whose jobs to find
+     *
      * @return The LinkedHashMap of the Jobs and JobStatus belonging to the specified Node
      */
     // TODO: Untested
@@ -128,6 +127,7 @@ public class JobManager {
      * Get the number of jobs that are currently allocated and in progress with a Node
      *
      * @param node The node whose active jobs to tally
+     *
      * @return The number of jobs allocated to the specified Node
      */
     public int getAmountOfActiveNodeJobs(Node node) {
@@ -149,6 +149,7 @@ public class JobManager {
      * Find the specified job object in the jobs LinkedHashMap using the supplied name
      *
      * @param jobName The name of the job to locate in the jobs LinkedHashMap
+     *
      * @return The job object matching the name, or null if not found
      */
     public Job findByName(String jobName) {
@@ -170,6 +171,7 @@ public class JobManager {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
+        // Iterate through the jobs LinkedHashMap, appending all the information about it
         int i = 0;
         for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
             i++;
@@ -179,6 +181,7 @@ public class JobManager {
             sb.append("Allocation Information: ");
             sb.append(jobDetails.getValue().toString());
 
+            // If we haven't reached the end of the list, add a new line
             if (i != jobs.size())
                 sb.append("\n");
         }

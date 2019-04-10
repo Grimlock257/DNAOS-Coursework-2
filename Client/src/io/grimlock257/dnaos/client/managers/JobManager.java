@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Job Manager for Client project
  * This class handles the storage of jobs and their status
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -46,8 +46,6 @@ public class JobManager {
      */
     public void addJob(Job job) {
         this.jobs.put(job, JobStatus.QUEUED);
-
-        System.out.println("[DEBUG] (JobManager:addJob()) Jobs list: \n" + this.toString());
     }
 
     /**
@@ -76,6 +74,7 @@ public class JobManager {
      * Find the specified job object in the jobs LinkedHashMap using the supplied name
      *
      * @param jobName The name of the job to locate in the jobs LinkedHashMap
+     *
      * @return The job object matching the name, or null if not found
      */
     public Job findByName(String jobName) {
@@ -97,6 +96,7 @@ public class JobManager {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
+        // Iterate through the jobs LinkedHashMap, appending all the information about it
         int i = 0;
         for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
             i++;
@@ -106,6 +106,7 @@ public class JobManager {
             sb.append("Status: ");
             sb.append(jobDetails.getValue().toString());
 
+            // If we haven't reached the end of the list, add a new line
             if (i != jobs.size())
                 sb.append("\n");
         }

@@ -65,26 +65,29 @@ public class LoadBalancer {
             socket.setSoTimeout(0);
 
             messageManager = MessageManager.getInstance();
-            MessageManager.getInstance().init(socket);
+            messageManager.init(socket);
             nodeManager = NodeManager.getInstance();
             jobManager = JobManager.getInstance();
 
+            // Have setup first?
             loop();
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
                 System.err.println("[ERROR] Port " + port + " is already in use, please select another port via the command line arguments");
                 System.err.println("[ERROR] Usage: java loadbalancer <port>");
             } else {
-                System.err.println("[ERROR]");
+                System.err.println("[ERROR] Unhandled BindException error thrown");
                 e.printStackTrace();
             }
         } catch (Exception e) {
-            System.err.println("[ERROR]");
+            System.err.println("[ERROR] Unhandled Exception thrown");
             e.printStackTrace();
         } finally {
             try {
                 socket.close();
             } catch (NullPointerException ignored) {
+                // We'll get a NullPointException (as the finally clause always runs) if the BindException
+                // was thrown - as this means the socket couldn't be created, so there is no socket object
             }
         }
     }
@@ -101,7 +104,7 @@ public class LoadBalancer {
             // Process messages (if available)
             String nextMessage = messageManager.getNextMessage();
 
-            if (nextMessage != "") {
+            if (nextMessage != null) {
                 processMessage(nextMessage);
             }
 
@@ -114,13 +117,14 @@ public class LoadBalancer {
 
                 if (nextJob != null) {
                     System.out.println("===============================================================================");
-                    System.out.println("[INFO] Job allocation taking place for '" + nextJob.getName() + "' to node '" + freestNode.getName() + "'");
+                    System.out.println("[INFO] Allocating job '" + nextJob.getName() + "'...\n");
 
                     jobManager.allocateJob(nextJob, freestNode);
+                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
                     messageManager.send(MessageType.NEW_JOB.toString() + "," + nextJob.getName() + "," + nextJob.getDuration(), freestNode.getAddr(), freestNode.getPort());
 
-                    System.out.println("[INFO] Node utilization is now " + freestNode.calcUsage() + "% (max capacity is " + freestNode.getCapacity() + ")");
+                    System.out.println("\n[INFO] Node '" + freestNode.getName() + "' utilization is now " + freestNode.calcUsage() + "% (max capacity is " + freestNode.getCapacity() + ")");
                 }
             }
         }
@@ -130,76 +134,85 @@ public class LoadBalancer {
      * Take in a message a string, analyse it and perform the appropriate action based on the contents
      *
      * @param message The message to analyse
+     *
      * @throws IOException
      */
     public void processMessage(String message) throws IOException {
-        // System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
 
-        // These messages are just for testing at the moment
+        // Nice formatting
+        System.out.println("===============================================================================");
+
+        // Perform appropriate action depending on the message type
         switch (getValidMessageType(args)) {
             case LB_SHUTDOWN:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...");
+                // TODO: Notify nodes
                 System.exit(0);
+
                 break;
             case CLIENT_REGISTER:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 clientIP = getValidStringArg(args, I_CLIENT_IP);
                 clientPort = getValidIntArg(args, I_CLIENT_PORT);
                 clientAddr = InetAddress.getByName(clientIP);
 
+                System.out.println("[INFO] New client added: IP: " + clientIP + ", Port: " + clientPort);
+
                 messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
+
                 break;
             case NODE_REGISTER:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String nodeIP = getValidStringArg(args, I_NODE_IP);
                 int nodePort = getValidIntArg(args, I_NODE_PORT);
                 String nodeName = getValidStringArg(args, I_NODE_NAME);
                 int nodeCap = getValidIntArg(args, I_NODE_CAP);
                 InetAddress nodeAddr = InetAddress.getByName(nodeIP);
+                Node newNode = new Node(nodePort, nodeAddr, nodeCap, nodeName);
 
-                nodeManager.addNode(new Node(nodePort, nodeAddr, nodeCap, nodeName));
+                nodeManager.addNode(newNode);
+
+                System.out.println("[INFO] New node added: " + newNode.toString() + "\n");
 
                 messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
 
+                System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
+
                 break;
             case NEW_JOB:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String jobName = getValidStringArg(args, I_JOB_NAME);
                 int jobDuration = getValidIntArg(args, I_JOB_DURATION);
+                Job newJob = new Job(jobName, jobDuration);
 
-                jobManager.addJob(new Job(jobName, jobDuration));
+                jobManager.addJob(newJob);
+
+                System.out.println("[INFO] New job added: " + newJob.toString() + "\n");
+
+                System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
                 break;
             case COMPLETE_JOB:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String completedJobName = getValidStringArg(args, I_COMPLETE_JOB_NAME);
 
                 Job completedJob = jobManager.findByName(completedJobName);
 
-                System.out.println("[INFO] Job '" + completedJob.getName() + "' has been completed");
+                messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
 
                 jobManager.updateJobStatus(completedJob, JobStatus.SENT);
 
-                messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
-
-                // Temporary
-                System.out.println("[INFO] Job '" + completedJob.getName() + "' has been sent to the client");
-                System.out.println("[INFO] Job List:\n" + jobManager.toString());
+                System.out.println("[INFO] Job '" + completedJob.getName() + "' is complete and sent to the client\n");
+                System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
                 break;
             default:
-                System.out.println("===============================================================================");
-                System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
+                System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
     }
 
@@ -207,6 +220,7 @@ public class LoadBalancer {
      * Validate the MessageType of the message
      *
      * @param args The message broken up into elements based on commas
+     *
      * @return The MessageType (UNKNOWN is non valid)
      */
     public MessageType getValidMessageType(String[] args) {
@@ -226,6 +240,7 @@ public class LoadBalancer {
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
+     *
      * @return The trimmed string or "" if invalid or null
      */
     public String getValidStringArg(String[] args, int pos) {
@@ -241,6 +256,7 @@ public class LoadBalancer {
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
+     *
      * @return The parsed integer or -1 if invalid or null
      */
     // TODO: Handle -1 outputs from this method

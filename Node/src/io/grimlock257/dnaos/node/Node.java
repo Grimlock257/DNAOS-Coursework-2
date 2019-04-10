@@ -14,7 +14,7 @@ import java.net.InetAddress;
 /**
  * Represent the Node in the Node project
  * This class represents a node and all it's functionality
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -63,30 +63,31 @@ public class Node {
     private void start() {
         try {
             socket = new DatagramSocket(nodePort);
+            socket.setSoTimeout(0);
 
             messageManager = MessageManager.getInstance();
             messageManager.init(socket);
             jobManager = JobManager.getInstance();
 
-            // System.out.println("[INFO] addr: " + addr.toString());
-
-            // try send register, once received confirmation of register, begin the main loop?
+            // Have setup first?
             loop();
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
                 System.err.println("[ERROR] Port " + nodePort + " is already in use, please select another port via the command line arguments");
                 System.err.println("[ERROR] Usage: java node <name> <capacity> <port> <load balancer host address> <load balancer port>");
             } else {
-                System.err.println("[ERROR]");
+                System.err.println("[ERROR] Unhandled BindException error thrown");
                 e.printStackTrace();
             }
         } catch (Exception e) {
-            System.err.println("[ERROR]");
+            System.err.println("[ERROR] Unhandled Exception thrown");
             e.printStackTrace();
         } finally {
             try {
                 socket.close();
             } catch (NullPointerException ignored) {
+                // We'll get a NullPointException (as the finally clause always runs) if the BindException
+                // was thrown - as this means the socket couldn't be created, so there is no socket object
             }
         }
     }
@@ -106,10 +107,11 @@ public class Node {
                 hasSentRegister = true;
             }
 
+            // Process messages (if available)
             String nextMessage = messageManager.getNextMessage();
 
             // TODO: Related to TODO: Causing block - thread the processMessage();
-            if (nextMessage != "") {
+            if (nextMessage != null) {
                 processMessage(nextMessage);
             }
 
@@ -129,6 +131,9 @@ public class Node {
                         try {
                             MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getName(), addr, lbPort);
                             JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
+
+                            System.out.println("[INFO] Job '" + nextJob.getName() + "' has been sent to the Load Balancer\n");
+                            System.out.println("[INFO] Current job list:\n" + jobManager.toString());
                         } catch (IOException e) {
                             System.err.println("[ERROR] An IO error occurred sending the complete job back to the Load Balancer");
                             e.printStackTrace();
@@ -145,32 +150,39 @@ public class Node {
      * Take in a message a string, analyse it and perform the appropriate action based on the contents
      *
      * @param message The message to analyse
+     *
      * @throws IOException
      */
     public void processMessage(String message) throws IOException {
-        // System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
 
-        // These messages are just for testing at the moment
+        // Nice formatting
+        System.out.println("===============================================================================");
+
+        // Perform appropriate action depending on the message type
         switch (getValidMessageType(args)) {
             case REGISTER_CONFIRM:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+                System.out.println("[INFO] Successfully registered with the Load Balancer");
                 connected = true;
+
                 break;
             case NEW_JOB:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String jobName = getValidStringArg(args, I_JOB_NAME);
                 int jobDuration = getValidIntArg(args, I_JOB_DURATION);
+                Job newJob = new Job(jobName, jobDuration);
 
-                jobManager.addJob(new Job(jobName, jobDuration));
+                jobManager.addJob(newJob);
+
+                System.out.println("[INFO] New job added: " + newJob.toString() + "\n");
+
+                System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
                 break;
             default:
-                System.out.println("===============================================================================");
-                System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
+                System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
     }
 
@@ -179,9 +191,11 @@ public class Node {
      *
      * @param job The job to be processed
      */
+    // TODO: Boolean return (catch would return false?)
     private void processJob(Job job) {
         System.out.println("===============================================================================");
-        System.out.println("[INFO] Processing job '" + job.getName() + "'");
+        System.out.println("[INFO] Began processing job '" + job.getName() + "'...\n");
+        System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
         // Try sleep for the job duration
         try {
@@ -190,18 +204,19 @@ public class Node {
             e.printStackTrace();
         }
 
-        // Update the job status to COMPLETE and send the job back to the Load Balancer
+        // Update the job status to COMPLETE
         JobManager.getInstance().updateJobStatus(job, JobStatus.COMPLETE);
 
         System.out.println("===============================================================================");
-        System.out.println("[INFO] Job '" + job.getName() + "' complete");
-        System.out.println(JobManager.getInstance().toString());
+        System.out.println("[INFO] Job '" + job.getName() + "' complete\n");
+        System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
     }
 
     /**
      * Validate the MessageType of the message
      *
      * @param args The message broken up into elements based on commas
+     *
      * @return The MessageType (UNKNOWN is non valid)
      */
     public MessageType getValidMessageType(String[] args) {
@@ -221,6 +236,7 @@ public class Node {
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
+     *
      * @return The trimmed string or "" if invalid or null
      */
     public String getValidStringArg(String[] args, int pos) {
@@ -236,6 +252,7 @@ public class Node {
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
+     *
      * @return The parsed integer or -1 if invalid or null
      */
     // TODO: Handle -1 outputs from this method

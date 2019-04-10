@@ -16,7 +16,7 @@ import java.net.InetAddress;
 /**
  * Represent the Client in the Client project
  * This class represents the client and all it's functionality
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -24,7 +24,6 @@ import java.net.InetAddress;
 public class Client {
     // Constants storing indexes for information within a message
     private final int I_MESSAGE_TYPE = 0;
-    // private final int I_JOB_DURATION = 1;
     private final int I_COMPLETE_JOB_NAME = 1;
 
     private boolean connected = false;
@@ -61,30 +60,31 @@ public class Client {
     private void start() {
         try {
             socket = new DatagramSocket(clientPort);
+            socket.setSoTimeout(0);
 
             messageManager = MessageManager.getInstance();
             messageManager.init(socket);
             jobManager = JobManager.getInstance();
 
-            // System.out.println("[INFO] addr: " + addr.toString());
-
-            // try send register, once received confirmation of register, begin the main loop?
+            // Have setup first?
             loop();
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
                 System.err.println("[ERROR] Port " + clientPort + " is already in use, please select another port via the command line arguments");
                 System.err.println("[ERROR] Usage: java client <port> <load balancer host address> <load balancer port>");
             } else {
-                System.err.println("[ERROR]");
+                System.err.println("[ERROR] Unhandled BindException error thrown");
                 e.printStackTrace();
             }
         } catch (Exception e) {
-            System.err.println("[ERROR]");
+            System.err.println("[ERROR] Unhandled Exception thrown");
             e.printStackTrace();
         } finally {
             try {
                 socket.close();
             } catch (NullPointerException ignored) {
+                // We'll get a NullPointException (as the finally clause always runs) if the BindException
+                // was thrown - as this means the socket couldn't be created, so there is no socket object
             }
         }
     }
@@ -119,9 +119,10 @@ public class Client {
                 hasSentRegister = true;
             }
 
+            // Process messages (if available)
             String nextMessage = messageManager.getNextMessage();
 
-            if (nextMessage != "") {
+            if (nextMessage != null) {
                 processMessage(nextMessage);
             }
         }
@@ -131,22 +132,25 @@ public class Client {
      * Take in a message a string, analyse it and perform the appropriate action based on the contents
      *
      * @param message The message to analyse
+     *
      * @throws IOException
      */
     public void processMessage(String message) throws IOException {
-        // System.out.println("[DEBUG] Received message: " + message);
         String[] args = message.split(",");
 
-        // These messages are just for testing at the moment
+        // Nice formatting
+        System.out.println("===============================================================================");
+
+        // Perform appropriate action depending on the message type
         switch (getValidMessageType(args)) {
             case REGISTER_CONFIRM:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+                System.out.println("[INFO] Successfully registered with the Load Balancer");
                 connected = true;
+
                 break;
             case COMPLETE_JOB:
-                System.out.println("===============================================================================");
-                System.out.println("[INFO] processMessage received '" + message + "'");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String jobName = getValidStringArg(args, I_COMPLETE_JOB_NAME);
 
@@ -154,14 +158,12 @@ public class Client {
 
                 jobManager.updateJobStatus(completedJob, JobStatus.COMPLETE);
 
-                // Temporary
-                System.out.println("[INFO] Job '" + completedJob.getName() + "' has been completed");
-                System.out.println("[INFO] Client Job List:\n" + jobManager.toString());
+                System.out.println("[INFO] Job '" + completedJob.getName() + "' complete\n");
+                System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
                 break;
             default:
-                System.out.println("===============================================================================");
-                System.err.println("[ERROR] processMessage received: '" + message + "' (unknown argument)");
+                System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
     }
 
@@ -183,10 +185,15 @@ public class Client {
             System.out.println("Enter job duration:");
             System.out.print("> ");
             int jobDuration = Integer.parseInt(keyboard.readLine());
+            Job newJob = new Job(jobName, jobDuration);
 
-            jobManager.addJob(new Job(jobName, jobDuration));
+            jobManager.addJob(newJob);
 
             messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
+
+            System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
+
+            System.out.println("[INFO] Current job list:\n" + jobManager.toString());
         } catch (NumberFormatException e) {
             System.out.println("[INPUT ERROR] Please enter an integer only");
         } catch (Exception e) {
@@ -198,6 +205,7 @@ public class Client {
      * Validate the MessageType of the message
      *
      * @param args The message broken up into elements based on commas
+     *
      * @return The MessageType (UNKNOWN is non valid)
      */
     public MessageType getValidMessageType(String[] args) {
@@ -217,6 +225,7 @@ public class Client {
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
+     *
      * @return The trimmed string or "" if invalid or null
      */
     public String getValidStringArg(String[] args, int pos) {
@@ -232,6 +241,7 @@ public class Client {
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
+     *
      * @return The parsed integer or -1 if invalid or null
      */
     // TODO: Handle -1 outputs from this method

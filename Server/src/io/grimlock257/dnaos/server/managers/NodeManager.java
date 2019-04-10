@@ -5,9 +5,9 @@ import io.grimlock257.dnaos.server.node.Node;
 import java.util.LinkedList;
 
 /**
- * Node Manager for Server project
+ * Node Manager for Load Balancer project
  * This class handles the storage of connected nodes and the allocation of jobs to nodes
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -44,8 +44,6 @@ public class NodeManager {
      */
     public void addNode(Node node) {
         nodes.add(node);
-
-        System.out.println("[DEBUG] Nodes list: \n" + this.toString());
     }
 
     /**
@@ -66,6 +64,8 @@ public class NodeManager {
     public Node getFreestNode() {
         Node freestNode = null;
 
+        // Iterate over the nodes LinkedList, checking the usage of the current found freest
+        // Node and comparing it with the current iteration node
         for (Node node : nodes) {
             if (freestNode == null) {
                 freestNode = node;
@@ -86,12 +86,14 @@ public class NodeManager {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
+        // Iterate through the nodes LinkedList, appending each node to the output
         int i = 0;
         for (Node node : nodes) {
             i++;
 
             sb.append(node.toString());
 
+            // If we haven't reached the end of the list, add a new line
             if (i != nodes.size())
                 sb.append("\n");
         }

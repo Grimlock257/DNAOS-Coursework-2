@@ -4,7 +4,7 @@ import io.grimlock257.dnaos.server.node.Node;
 
 /**
  * Data structure to store the node allocated to a job and the status of the job
- * <p>
+ *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
@@ -14,7 +14,7 @@ public class JobAlloc {
     private JobStatus jobStatus;
 
     /**
-     * JobAlloc constructor
+     * Create a new object to store the allocation of a node to a job and the current status
      *
      * @param node      The node allocated to the job
      * @param jobStatus The status of the job
@@ -50,7 +50,7 @@ public class JobAlloc {
     /**
      * Set the JobStatus associated with the job
      *
-     * @param jobStatus
+     * @param jobStatus The new status of the job
      */
     public void setJobStatus(JobStatus jobStatus) {
         this.jobStatus = jobStatus;
