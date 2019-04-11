@@ -28,13 +28,20 @@ public class Node {
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
 
+    // Information about the node
     private String name;
     private int capacity;
-    private int nodePort;
+    private int port;
+
+    // Information about the load balancer
     private String lbHost;
     private int lbPort;
+    private InetAddress lbAddr;
+
+    // The socket for the node to communicate through
     private DatagramSocket socket;
 
+    // Managers that the node uses
     private MessageManager messageManager;
     private JobManager jobManager;
 
@@ -43,14 +50,15 @@ public class Node {
      *
      * @param name     The name of the name
      * @param capacity The maximum amount of jobs the node can handle at a time
-     * @param nodePort The port for the node to communicate through
+     * @param port     The port for the node to communicate through
      * @param lbHost   The IP address of the load balancer
      * @param lbPort   The port of the load balancer
      */
-    public Node(String name, int capacity, int nodePort, String lbHost, int lbPort) {
+    public Node(String name, int capacity, int port, String lbHost, int lbPort) {
         this.name = name;
         this.capacity = capacity;
-        this.nodePort = nodePort;
+        this.port = port;
+
         this.lbHost = lbHost;
         this.lbPort = lbPort;
 
@@ -62,7 +70,7 @@ public class Node {
      */
     private void start() {
         try {
-            socket = new DatagramSocket(nodePort);
+            socket = new DatagramSocket(port);
             socket.setSoTimeout(0);
 
             messageManager = MessageManager.getInstance();
@@ -73,7 +81,7 @@ public class Node {
             loop();
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
-                System.err.println("[ERROR] Port " + nodePort + " is already in use, please select another port via the command line arguments");
+                System.err.println("[ERROR] Port " + port + " is already in use, please select another port via the command line arguments");
                 System.err.println("[ERROR] Usage: java node <name> <capacity> <port> <load balancer host address> <load balancer port>");
             } else {
                 System.err.println("[ERROR] Unhandled BindException error thrown");
@@ -98,12 +106,12 @@ public class Node {
      * @throws IOException When keyboard input can not be retrieved
      */
     private void loop() throws IOException {
-        InetAddress addr = InetAddress.getByName(lbHost);
+        lbAddr = InetAddress.getByName(lbHost);
 
         while (true) {
             if (!hasSentRegister) {
                 System.out.println("Connecting to load balancer...");
-                messageManager.send(MessageType.NODE_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.nodePort + "," + this.name + "," + this.capacity, addr, lbPort);
+                messageManager.send(MessageType.NODE_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.port + "," + this.name + "," + this.capacity, lbAddr, lbPort);
                 hasSentRegister = true;
             }
 
@@ -128,16 +136,11 @@ public class Node {
                         processJob(nextJob);
 
                         // Send the complete job back to the Load Balancer
-                        try {
-                            MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getName(), addr, lbPort);
-                            JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
+                        MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getName(), lbAddr, lbPort);
+                        JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
 
-                            System.out.println("[INFO] Job '" + nextJob.getName() + "' has been sent to the Load Balancer\n");
-                            System.out.println("[INFO] Current job list:\n" + jobManager.toString());
-                        } catch (IOException e) {
-                            System.err.println("[ERROR] An IO error occurred sending the complete job back to the Load Balancer");
-                            e.printStackTrace();
-                        }
+                        System.out.println("[INFO] Job '" + nextJob.getName() + "' has been sent to the Load Balancer\n");
+                        System.out.println("[INFO] Current job list:\n" + jobManager.toString());
                     }
                 });
 
@@ -150,10 +153,8 @@ public class Node {
      * Take in a message a string, analyse it and perform the appropriate action based on the contents
      *
      * @param message The message to analyse
-     *
-     * @throws IOException
      */
-    public void processMessage(String message) throws IOException {
+    private void processMessage(String message) {
         String[] args = message.split(",");
 
         // Nice formatting
@@ -172,15 +173,20 @@ public class Node {
 
                 String jobName = getValidStringArg(args, I_JOB_NAME);
                 int jobDuration = getValidIntArg(args, I_JOB_DURATION);
-                Job newJob = new Job(jobName, jobDuration);
 
-                jobManager.addJob(newJob);
+                if (jobName == null || jobDuration == -1) {
+                    System.out.println("[ERROR] Job was not added, some of the supplied information was invalid");
+                } else {
+                    Job newJob = new Job(jobName, jobDuration);
 
-                System.out.println("[INFO] New job added: " + newJob.toString() + "\n");
+                    jobManager.addJob(newJob);
 
-                System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                    System.out.println("[INFO] New job added: " + newJob.toString() + "\n");
+                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                }
 
                 break;
+            case UNKNOWN:
             default:
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
@@ -219,7 +225,7 @@ public class Node {
      *
      * @return The MessageType (UNKNOWN is non valid)
      */
-    public MessageType getValidMessageType(String[] args) {
+    private MessageType getValidMessageType(String[] args) {
         if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
                 return MessageType.valueOf(args[I_MESSAGE_TYPE].trim());
@@ -232,31 +238,30 @@ public class Node {
     }
 
     /**
-     * Validate a string argument within the message at the specified pos
+     * Validate a string argument within the message at the specified position
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
      *
      * @return The trimmed string or "" if invalid or null
      */
-    public String getValidStringArg(String[] args, int pos) {
+    private String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
-            return (args[pos] != null) ? args[pos].trim() : "";
+            return (args[pos] != null) ? args[pos].trim() : null;
         } else {
-            return "";
+            return null;
         }
     }
 
     /**
-     * Validate an integer argument with the message at the specified pos
+     * Validate an integer argument with the message at the specified position
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
      *
      * @return The parsed integer or -1 if invalid or null
      */
-    // TODO: Handle -1 outputs from this method
-    public int getValidIntArg(String[] args, int pos) {
+    private int getValidIntArg(String[] args, int pos) {
         if (args.length > pos && args[pos] != null) {
             try {
                 return Integer.parseInt(args[pos].trim());

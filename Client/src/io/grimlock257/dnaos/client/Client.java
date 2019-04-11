@@ -30,24 +30,31 @@ public class Client {
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
     private boolean hasBeganUserInputThread = false; // TODO: Better method of implementing this
 
-    private int clientPort;
+    // Information about the client
+    private int port;
+
+    // Information about the load balancer
     private String lbHost;
     private int lbPort;
     private InetAddress lbAddr;
+
+    // The socket for the client to communicate through
     private DatagramSocket socket;
 
+    // Managers that the client uses
     private MessageManager messageManager;
     private JobManager jobManager;
 
     /**
      * Create a new client instance
      *
-     * @param clientPort The port for the client to communicate through
-     * @param lbHost     The IP address of the load balancer
-     * @param lbPort     The port of the load balancer
+     * @param port   The port for the client to communicate through
+     * @param lbHost The IP address of the load balancer
+     * @param lbPort The port of the load balancer
      */
-    public Client(int clientPort, String lbHost, int lbPort) {
-        this.clientPort = clientPort;
+    public Client(int port, String lbHost, int lbPort) {
+        this.port = port;
+
         this.lbHost = lbHost;
         this.lbPort = lbPort;
 
@@ -59,7 +66,7 @@ public class Client {
      */
     private void start() {
         try {
-            socket = new DatagramSocket(clientPort);
+            socket = new DatagramSocket(port);
             socket.setSoTimeout(0);
 
             messageManager = MessageManager.getInstance();
@@ -70,7 +77,7 @@ public class Client {
             loop();
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
-                System.err.println("[ERROR] Port " + clientPort + " is already in use, please select another port via the command line arguments");
+                System.err.println("[ERROR] Port " + port + " is already in use, please select another port via the command line arguments");
                 System.err.println("[ERROR] Usage: java client <port> <load balancer host address> <load balancer port>");
             } else {
                 System.err.println("[ERROR] Unhandled BindException error thrown");
@@ -115,7 +122,7 @@ public class Client {
                 hasBeganUserInputThread = true;
             } else if (!hasSentRegister) {
                 System.out.println("Connecting to load balancer...");
-                messageManager.send(MessageType.CLIENT_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.clientPort, lbAddr, lbPort);
+                messageManager.send(MessageType.CLIENT_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.port, lbAddr, lbPort);
                 hasSentRegister = true;
             }
 
@@ -132,10 +139,8 @@ public class Client {
      * Take in a message a string, analyse it and perform the appropriate action based on the contents
      *
      * @param message The message to analyse
-     *
-     * @throws IOException
      */
-    public void processMessage(String message) throws IOException {
+    private void processMessage(String message) {
         String[] args = message.split(",");
 
         // Nice formatting
@@ -154,14 +159,19 @@ public class Client {
 
                 String jobName = getValidStringArg(args, I_COMPLETE_JOB_NAME);
 
-                Job completedJob = jobManager.findByName(jobName);
+                if (jobName == null) {
+                    System.out.println("[ERROR] Job was not altered, some of the supplied information was invalid");
+                } else {
+                    Job completedJob = jobManager.findByName(jobName);
 
-                jobManager.updateJobStatus(completedJob, JobStatus.COMPLETE);
+                    jobManager.updateJobStatus(completedJob, JobStatus.COMPLETE);
 
-                System.out.println("[INFO] Job '" + completedJob.getName() + "' complete\n");
-                System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                    System.out.println("[INFO] Job '" + completedJob.getName() + "' complete\n");
+                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                }
 
                 break;
+            case UNKNOWN:
             default:
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
@@ -182,9 +192,9 @@ public class Client {
             System.out.print("> ");
             String jobName = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
 
-            System.out.println("Enter job duration:");
-            System.out.print("> ");
-            int jobDuration = Integer.parseInt(keyboard.readLine());
+            //System.out.println("Enter job duration:");
+            //System.out.print("> ");
+            int jobDuration = 1;//Integer.parseInt(keyboard.readLine());
             Job newJob = new Job(jobName, jobDuration);
 
             jobManager.addJob(newJob);
@@ -208,7 +218,7 @@ public class Client {
      *
      * @return The MessageType (UNKNOWN is non valid)
      */
-    public MessageType getValidMessageType(String[] args) {
+    private MessageType getValidMessageType(String[] args) {
         if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
                 return MessageType.valueOf(args[I_MESSAGE_TYPE].trim());
@@ -221,31 +231,30 @@ public class Client {
     }
 
     /**
-     * Validate a string argument within the message at the specified pos
+     * Validate a string argument within the message at the specified position
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
      *
      * @return The trimmed string or "" if invalid or null
      */
-    public String getValidStringArg(String[] args, int pos) {
+    private String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
-            return (args[pos] != null) ? args[pos].trim() : "";
+            return (args[pos] != null) ? args[pos].trim() : null;
         } else {
-            return "";
+            return null;
         }
     }
 
     /**
-     * Validate an integer argument with the message at the specified pos
+     * Validate an integer argument with the message at the specified position
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
      *
      * @return The parsed integer or -1 if invalid or null
      */
-    // TODO: Handle -1 outputs from this method
-    public int getValidIntArg(String[] args, int pos) {
+    private int getValidIntArg(String[] args, int pos) {
         if (args.length > pos && args[pos] != null) {
             try {
                 return Integer.parseInt(args[pos].trim());

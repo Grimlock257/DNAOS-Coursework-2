@@ -56,8 +56,6 @@ public class JobManager {
     // TODO: Untested
     public void removeJob(Job job) {
         this.jobs.remove(job);
-
-        System.out.println("[DEBUG] (JobManager:removeJob()) Jobs list: \n" + this.toString());
     }
 
     /**

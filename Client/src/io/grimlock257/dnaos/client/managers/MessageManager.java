@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -61,12 +60,14 @@ public class MessageManager {
      * @param message The message to be sent
      * @param address The address to send the packet to
      * @param port    The port to sent the packet to
-     *
-     * @throws IOException When the packet cannot be sent via the UDP socket
      */
-    public void send(String message, InetAddress address, int port) throws IOException {
-        DatagramPacket packet = new DatagramPacket(message.getBytes(), message.getBytes().length, address, port);
-        socket.send(packet);
+    public void send(String message, InetAddress address, int port) {
+        try {
+            DatagramPacket packet = new DatagramPacket(message.getBytes(), message.getBytes().length, address, port);
+            socket.send(packet);
+        } catch (IOException e) {
+            System.err.println("[ERROR] The packet could not be sent due to IOException");
+        }
     }
 
     /**
@@ -134,25 +135,21 @@ public class MessageManager {
      * @return The next unread message as a String
      */
     public String getNextMessage() {
-        try {
-            // Lock the messagesLock so that only one thread may access the messages LinkedList at any one time
-            synchronized (messageLock) {
-                for (int i = 0; i < getMessages().size(); i++) {
-                    HashMap<String, Boolean> message = getMessages().get(i);
+        // Lock the messagesLock so that only one thread may access the messages LinkedList at any one time
+        synchronized (messageLock) {
+            for (int i = 0; i < getMessages().size(); i++) {
+                HashMap<String, Boolean> message = getMessages().get(i);
 
-                    // Check if the message has been read or not
-                    if (!message.get(message.keySet().toArray()[0])) {
-                        // Update the corresponding HashMap
-                        getMessages().set(i, new HashMap<String, Boolean>() {{
-                            put(message.keySet().toArray()[0].toString(), true);
-                        }});
+                // Check if the message has been read or not
+                if (!message.get(message.keySet().toArray()[0])) {
+                    // Update the corresponding HashMap
+                    getMessages().set(i, new HashMap<String, Boolean>() {{
+                        put(message.keySet().toArray()[0].toString(), true);
+                    }});
 
-                        return message.keySet().toArray()[0].toString();
-                    }
+                    return message.keySet().toArray()[0].toString();
                 }
             }
-        } catch (ConcurrentModificationException e) {
-            e.printStackTrace();
         }
 
         return null;

@@ -34,13 +34,18 @@ public class LoadBalancer {
     private final int I_COMPLETE_JOB_NAME = 1;
 
     // TODO: Temp - need Client representation class
+    // Information about the connected client
     private String clientIP;
     private int clientPort;
     private InetAddress clientAddr;
 
+    // Information about the load balancer
     private int port = 0;
+
+    // The socket for the load balancer to communicate though
     private DatagramSocket socket;
 
+    // Managers that the load balancer uses
     private MessageManager messageManager;
     private NodeManager nodeManager;
     private JobManager jobManager;
@@ -135,9 +140,9 @@ public class LoadBalancer {
      *
      * @param message The message to analyse
      *
-     * @throws IOException
+     * @throws IOException When InetAddress cannot be resolved from the supplied IP address
      */
-    public void processMessage(String message) throws IOException {
+    private void processMessage(String message) throws IOException {
         String[] args = message.split(",");
 
         // Nice formatting
@@ -156,11 +161,16 @@ public class LoadBalancer {
 
                 clientIP = getValidStringArg(args, I_CLIENT_IP);
                 clientPort = getValidIntArg(args, I_CLIENT_PORT);
-                clientAddr = InetAddress.getByName(clientIP);
 
-                System.out.println("[INFO] New client added: IP: " + clientIP + ", Port: " + clientPort);
+                if (clientIP == null || clientPort == -1) {
+                    System.out.println("[ERROR] Client was not added, some of the supplied information was invalid");
+                } else {
+                    clientAddr = InetAddress.getByName(clientIP);
 
-                messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
+                    System.out.println("[INFO] New client added: IP: " + clientIP + ", Port: " + clientPort);
+
+                    messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
+                }
 
                 break;
             case NODE_REGISTER:
@@ -170,16 +180,21 @@ public class LoadBalancer {
                 int nodePort = getValidIntArg(args, I_NODE_PORT);
                 String nodeName = getValidStringArg(args, I_NODE_NAME);
                 int nodeCap = getValidIntArg(args, I_NODE_CAP);
-                InetAddress nodeAddr = InetAddress.getByName(nodeIP);
-                Node newNode = new Node(nodePort, nodeAddr, nodeCap, nodeName);
 
-                nodeManager.addNode(newNode);
+                if (nodeIP == null || nodePort == -1 || nodeName == null || nodeCap == -1) {
+                    System.out.println("[ERROR] Node was not added, some of the supplied information was invalid");
+                } else {
+                    InetAddress nodeAddr = InetAddress.getByName(nodeIP);
 
-                System.out.println("[INFO] New node added: " + newNode.toString() + "\n");
+                    Node newNode = new Node(nodePort, nodeAddr, nodeCap, nodeName);
+                    nodeManager.addNode(newNode);
 
-                messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
+                    System.out.println("[INFO] New node added: " + newNode.toString() + "\n");
 
-                System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
+                    messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
+
+                    System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
+                }
 
                 break;
             case NEW_JOB:
@@ -187,13 +202,17 @@ public class LoadBalancer {
 
                 String jobName = getValidStringArg(args, I_JOB_NAME);
                 int jobDuration = getValidIntArg(args, I_JOB_DURATION);
-                Job newJob = new Job(jobName, jobDuration);
 
-                jobManager.addJob(newJob);
+                if (jobName == null || jobDuration == -1) {
+                    System.out.println("[ERROR] Job was not added, some of the supplied information was invalid");
+                } else {
+                    Job newJob = new Job(jobName, jobDuration);
 
-                System.out.println("[INFO] New job added: " + newJob.toString() + "\n");
+                    jobManager.addJob(newJob);
 
-                System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                    System.out.println("[INFO] New job added: " + newJob.toString() + "\n");
+                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                }
 
                 break;
             case COMPLETE_JOB:
@@ -201,16 +220,21 @@ public class LoadBalancer {
 
                 String completedJobName = getValidStringArg(args, I_COMPLETE_JOB_NAME);
 
-                Job completedJob = jobManager.findByName(completedJobName);
+                if (completedJobName == null) {
+                    System.out.println("[ERROR] Job was not altered, some of the supplied information was invalid");
+                } else {
+                    Job completedJob = jobManager.findByName(completedJobName);
 
-                messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
+                    messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
 
-                jobManager.updateJobStatus(completedJob, JobStatus.SENT);
+                    jobManager.updateJobStatus(completedJob, JobStatus.SENT);
 
-                System.out.println("[INFO] Job '" + completedJob.getName() + "' is complete and sent to the client\n");
-                System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                    System.out.println("[INFO] Job '" + completedJob.getName() + "' is complete and sent to the client\n");
+                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                }
 
                 break;
+            case UNKNOWN:
             default:
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
@@ -223,7 +247,7 @@ public class LoadBalancer {
      *
      * @return The MessageType (UNKNOWN is non valid)
      */
-    public MessageType getValidMessageType(String[] args) {
+    private MessageType getValidMessageType(String[] args) {
         if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
                 return MessageType.valueOf(args[I_MESSAGE_TYPE].trim());
@@ -236,31 +260,30 @@ public class LoadBalancer {
     }
 
     /**
-     * Validate a string argument within the message at the specified pos
+     * Validate a string argument within the message at the specified position
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
      *
      * @return The trimmed string or "" if invalid or null
      */
-    public String getValidStringArg(String[] args, int pos) {
+    private String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
-            return (args[pos] != null) ? args[pos].trim() : "";
+            return (args[pos] != null) ? args[pos].trim() : null;
         } else {
-            return "";
+            return null;
         }
     }
 
     /**
-     * Validate an integer argument with the message at the specified pos
+     * Validate an integer argument with the message at the specified position
      *
      * @param args The message broken up into elements based on commas
      * @param pos  The element to validate
      *
      * @return The parsed integer or -1 if invalid or null
      */
-    // TODO: Handle -1 outputs from this method
-    public int getValidIntArg(String[] args, int pos) {
+    private int getValidIntArg(String[] args, int pos) {
         if (args.length > pos && args[pos] != null) {
             try {
                 return Integer.parseInt(args[pos].trim());
