@@ -253,7 +253,7 @@ public class Node {
      */
     private String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
-            return (args[pos] != null) ? args[pos].trim() : null;
+            return (args[pos] != null || !args[pos].trim().equals("")) ? args[pos].trim() : null;
         } else {
             return null;
         }

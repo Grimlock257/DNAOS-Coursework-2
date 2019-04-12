@@ -77,6 +77,7 @@ public class LoadBalancer {
 
             // Have setup first?
             loop();
+            // TODO: MessageManager.receive thread is still running - causes continuous socket closed exceptions
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
                 System.err.println("[ERROR] Port " + port + " is already in use, please select another port via the command line arguments");
@@ -152,8 +153,9 @@ public class LoadBalancer {
         // Perform appropriate action depending on the message type
         switch (getValidMessageType(args)) {
             case LB_SHUTDOWN:
-                System.out.println("[INFO] Received '" + message + "', processing...");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
 
+                System.out.println("[INFO] Sending shutdown message to nodes...\n");
                 nodeManager.shutdownAllNodes();
 
                 System.out.println("[INFO] Shutting down...");
@@ -161,7 +163,7 @@ public class LoadBalancer {
 
                 break;
             case NODE_SHUTDOWN_SPECIFIC:
-                System.out.println("[INFO] Received '" + message + "', processing...");
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String shutdownNodeName = getValidStringArg(args, I_SHUTDOWN_NODE_NAME);
 
@@ -170,10 +172,14 @@ public class LoadBalancer {
                 } else {
                     Node shutdownNode = nodeManager.findByName(shutdownNodeName);
 
-                    nodeManager.shutdownNode(shutdownNode);
+                    if (shutdownNode == null) {
+                        System.out.println("[ERROR] Node was not shutdown as no node with name '" + shutdownNodeName + "' was found");
+                    } else {
+                        nodeManager.shutdownNode(shutdownNode);
 
-                    System.out.println("\n[INFO] The following node has been removed: " + shutdownNode.toString());
-                    System.out.println("\n[INFO] Current nodes:\n" + nodeManager.toString());
+                        System.out.println("[INFO] The following node has been removed: " + shutdownNode.toString() + "\n");
+                        System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
+                    }
                 }
 
                 break;
@@ -246,12 +252,16 @@ public class LoadBalancer {
                 } else {
                     Job completedJob = jobManager.findByName(completedJobName);
 
-                    messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
+                    if (completedJob == null) {
+                        System.out.println("[ERROR] Job was not marked as complete or sent to the client as no job with name '" + completedJobName + "' was found");
+                    } else {
+                        messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
 
-                    jobManager.updateJobStatus(completedJob, JobStatus.SENT);
+                        jobManager.updateJobStatus(completedJob, JobStatus.SENT);
 
-                    System.out.println("[INFO] Job '" + completedJob.getName() + "' is complete and sent to the client\n");
-                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                        System.out.println("[INFO] Job '" + completedJob.getName() + "' is complete and sent to the client\n");
+                        System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                    }
                 }
 
                 break;
@@ -290,7 +300,7 @@ public class LoadBalancer {
      */
     private String getValidStringArg(String[] args, int pos) {
         if (args.length > pos) {
-            return (args[pos] != null) ? args[pos].trim() : null;
+            return (args[pos] != null || !args[pos].trim().equals("")) ? args[pos].trim() : null;
         } else {
             return null;
         }

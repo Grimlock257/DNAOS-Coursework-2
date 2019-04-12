@@ -95,7 +95,7 @@ public class NodeManager {
             // Remove the node from the list
             itr.remove();
 
-            System.out.println("Removed node: " + node.toString());
+            System.out.println("Node removed from node list: " + node.toString());
         }
     }
 
