@@ -146,6 +146,23 @@ public class JobManager {
     }
 
     /**
+     * Find allocated node given a job name
+     *
+     * @param jobName The job to find which node is allocated
+     *
+     * @return The allocated node, or null if not found
+     */
+    public Node getNodeByJob(String jobName) {
+        for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getKey().getName().equals(jobName)) {
+                return jobDetails.getValue().getNode();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Find the specified job object in the jobs LinkedHashMap using the supplied name
      *
      * @param jobName The name of the job to locate in the jobs LinkedHashMap

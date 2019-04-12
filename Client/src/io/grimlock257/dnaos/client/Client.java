@@ -26,6 +26,7 @@ public class Client {
     // Constants storing indexes for information within a message
     private final int I_MESSAGE_TYPE = 0;
     private final int I_COMPLETE_JOB_NAME = 1;
+    private final int I_CANCELLED_JOB_NAME = 1;
 
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
@@ -172,6 +173,23 @@ public class Client {
                 }
 
                 break;
+            case CANCEL_JOB_CONFIRM:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String cancelledJobName = getValidStringArg(args, I_CANCELLED_JOB_NAME);
+
+                if (cancelledJobName == null) {
+                    System.out.println("[ERROR] Job was not altered, some of the supplied information was invalid");
+                } else {
+                    Job cancelledJob = jobManager.findByName(cancelledJobName);
+
+                    jobManager.updateJobStatus(cancelledJob, JobStatus.CANCELLED);
+
+                    System.out.println("[INFO] Job '" + cancelledJob.getName() + "' cancelled\n");
+                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                }
+
+                break;
             case UNKNOWN:
             default:
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
@@ -183,6 +201,7 @@ public class Client {
      */
     private enum CommandOptions {
         NEW_JOB,
+        CANCEL_JOB,
         SHUTDOWN_ALL,
         SHUTDOWN_SPECIFIC;
 
@@ -216,10 +235,10 @@ public class Client {
             // Provide the relevant input form depending on the menu option they selected
             switch (selected) {
                 case NEW_JOB:
-                    System.out.print("Enter job name: ");
+                    System.out.print("Enter new job name: ");
                     String jobName = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
 
-                    System.out.print("Enter job duration: ");
+                    System.out.print("Enter new job duration: ");
                     int jobDuration = Integer.parseInt(keyboard.readLine());
                     Job newJob = new Job(jobName, jobDuration);
 
@@ -229,6 +248,29 @@ public class Client {
 
                     System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
                     System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+
+                    break;
+                case CANCEL_JOB:
+                    System.out.print("Enter job name of which to cancel: ");
+                    String cancelJobName = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
+
+                    if (cancelJobName == null) {
+                        System.out.println("[ERROR] Cancel job request was not sent, some of the supplied information was invalid");
+                    } else {
+                        Job cancelJob = jobManager.findByName(cancelJobName);
+
+                        if (cancelJob == null) {
+                            System.out.println("[ERROR] Cancel job request was not issued as no job with name '" + cancelJobName + "' was found");
+                        } else if (jobManager.getJobStatus(cancelJobName) == JobStatus.COMPLETE) {
+                            System.out.println("[ERROR] Cancel job request was not sent as the job is already complete");
+                        } else {
+                            jobManager.updateJobStatus(cancelJob, JobStatus.REQUESTED_CANCEL);
+
+                            messageManager.send(MessageType.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, lbAddr, lbPort);
+
+                            System.out.println("[INFO] Job cancel request has been issued");
+                        }
+                    }
 
                     break;
                 case SHUTDOWN_ALL:

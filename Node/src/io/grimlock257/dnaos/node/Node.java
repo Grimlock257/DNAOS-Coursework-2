@@ -24,6 +24,7 @@ public class Node {
     private final int I_MESSAGE_TYPE = 0;
     private final int I_JOB_NAME = 1;
     private final int I_JOB_DURATION = 2;
+    private final int I_CANCEL_REQUEST_JOB_NAME = 1;
 
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
@@ -129,20 +130,23 @@ public class Node {
 
             if (nextJob != null) {
                 // A new thread is created for each job to be ran
-                Thread jobProcessing = new Thread(new Runnable() {
+                Thread jobProcessing = new Thread("job_processing_" + nextJob.getName().toLowerCase().replace(" ", "_")) {
+                    // Thread jobProcessing = new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        System.out.println("Thread Name: " + Thread.currentThread().getName());
+
                         // Process the job
-                        processJob(nextJob);
+                        if (processJob(nextJob)) {
+                            // Send the complete job back to the Load Balancer
+                            MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getName(), lbAddr, lbPort);
+                            JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
 
-                        // Send the complete job back to the Load Balancer
-                        MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getName(), lbAddr, lbPort);
-                        JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
-
-                        System.out.println("[INFO] Job '" + nextJob.getName() + "' has been sent to the Load Balancer\n");
-                        System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                            System.out.println("[INFO] Job '" + nextJob.getName() + "' has been sent to the Load Balancer\n");
+                            System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                        }
                     }
-                });
+                };
 
                 jobProcessing.start();
             }
@@ -186,6 +190,57 @@ public class Node {
                 }
 
                 break;
+            case CANCEL_JOB_REQUEST:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String cancelJobName = getValidStringArg(args, I_CANCEL_REQUEST_JOB_NAME);
+
+                if (cancelJobName == null) {
+                    System.out.println("[ERROR] Job was not cancelled, some of the supplied information was invalid");
+                } else {
+                    Job cancelJob = jobManager.findByName(cancelJobName);
+
+                    if (cancelJob == null) {
+                        System.out.println("[ERROR] Job was not cancelled as no job with name '" + cancelJobName + "' was found");
+                    } else {
+                        System.out.println("[INFO] Alive threads before:");
+
+                        // Iterate through the set of threads, printing the name of each
+                        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                            if (thread.isAlive()) {
+                                System.out.println("Thread name: " + thread.getName());
+                            }
+                        }
+
+                        // Iterate through the set of threads, looking for the thread that matches the cancelled job
+                        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                            if (thread.getName().equals("job_processing_" + cancelJob.getName().toLowerCase().replace(" ", "_"))) {
+                                thread.interrupt();
+
+                                System.out.println("\n[INFO] Job '" + cancelJob.getName() + "' has been cancelled");
+
+                                break;
+                            }
+                        }
+
+                        System.out.println("\n[INFO] Alive threads after:");
+
+                        // Iterate through the set of threads, printing the name of each
+                        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                            if (thread.isAlive()) {
+                                System.out.println("Thread name: " + thread.getName());
+                            }
+                        }
+
+                        messageManager.send(MessageType.CANCEL_JOB_CONFIRM.toString() + "," + cancelJobName, lbAddr, lbPort);
+
+                        jobManager.updateJobStatus(cancelJob, JobStatus.CANCELLED);
+
+                        System.out.println("\n[INFO] Current job list:\n" + jobManager.toString());
+                    }
+                }
+
+                break;
             case NODE_SHUTDOWN:
                 System.out.println("[INFO] Received '" + message + "', processing...");
                 System.out.println("[INFO] Shutting down...");
@@ -202,9 +257,10 @@ public class Node {
      * Process the passed in job
      *
      * @param job The job to be processed
+     *
+     * @return Whether or not the job processing was interrupted
      */
-    // TODO: Boolean return (catch would return false?)
-    private void processJob(Job job) {
+    private boolean processJob(Job job) {
         System.out.println("===============================================================================");
         System.out.println("[INFO] Began processing job '" + job.getName() + "'...\n");
         System.out.println("[INFO] Current job list:\n" + jobManager.toString());
@@ -213,7 +269,7 @@ public class Node {
         try {
             Thread.sleep(job.getDuration() * 1000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            return false;
         }
 
         // Update the job status to COMPLETE
@@ -222,6 +278,8 @@ public class Node {
         System.out.println("===============================================================================");
         System.out.println("[INFO] Job '" + job.getName() + "' complete\n");
         System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
+
+        return true;
     }
 
     /**

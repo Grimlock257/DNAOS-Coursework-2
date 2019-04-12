@@ -11,5 +11,6 @@ public enum JobStatus {
     QUEUED,
     IN_PROGRESS,
     COMPLETE,
+    CANCELLED,
     SENT
 }

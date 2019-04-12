@@ -59,6 +59,23 @@ public class JobManager {
     }
 
     /**
+     * Get the status of a job with the specified name
+     *
+     * @param jobName The job to find the status off
+     *
+     * @return The status of the job
+     */
+    public JobStatus getJobStatus(String jobName) {
+        for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getKey().getName().equals(jobName)) {
+                return jobDetails.getValue();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Update the JobStatus of a job
      *
      * @param job       The job that has the JobStatus to be updated

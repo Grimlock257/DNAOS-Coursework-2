@@ -32,6 +32,8 @@ public class LoadBalancer {
     private final int I_JOB_NAME = 1;
     private final int I_JOB_DURATION = 2;
     private final int I_COMPLETE_JOB_NAME = 1;
+    private final int I_CANCEL_REQUEST_JOB_NAME = 1;
+    private final int I_CANCELLED_JOB_NAME = 1;
     private final int I_SHUTDOWN_NODE_NAME = 1;
 
     // TODO: Temp - need Client representation class
@@ -260,6 +262,58 @@ public class LoadBalancer {
                         jobManager.updateJobStatus(completedJob, JobStatus.SENT);
 
                         System.out.println("[INFO] Job '" + completedJob.getName() + "' is complete and sent to the client\n");
+                        System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                    }
+                }
+
+                break;
+            case CANCEL_JOB_REQUEST:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String cancelJobName = getValidStringArg(args, I_CANCEL_REQUEST_JOB_NAME);
+
+                if (cancelJobName == null) {
+                    System.out.println("[ERROR] Job cancel request was not issued, some of the supplied information was invalid");
+                } else {
+                    Job cancelJob = jobManager.findByName(cancelJobName);
+
+                    if (cancelJob == null) {
+                        System.out.println("[ERROR] Job cancel request was not issued as no job with name '" + cancelJobName + "' was found");
+                    } else {
+                        Node jobNode = jobManager.getNodeByJob(cancelJob.getName());
+
+                        if (jobNode == null) {
+                            System.out.println("[ERROR] The node allocated to the job could not be found");
+                        } else {
+                            messageManager.send(MessageType.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, jobNode.getAddr(), jobNode.getPort());
+
+                            jobManager.updateJobStatus(cancelJob, JobStatus.REQUESTED_CANCEL);
+
+                            System.out.println("[INFO] Job '" + cancelJob.getName() + "' has been requested to be cancelled\n");
+                            System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                        }
+                    }
+                }
+
+                break;
+            case CANCEL_JOB_CONFIRM:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String cancelledJobName = getValidStringArg(args, I_CANCELLED_JOB_NAME);
+
+                if (cancelledJobName == null) {
+                    System.out.println("[ERROR] Job was not altered, some of the supplied information was invalid");
+                } else {
+                    Job cancelledJob = jobManager.findByName(cancelledJobName);
+
+                    if (cancelledJob == null) {
+                        System.out.println("[ERROR] Job was not marked as cancelled or sent to the client as no job with name '" + cancelledJobName + "' was found");
+                    } else {
+                        messageManager.send(MessageType.CANCEL_JOB_CONFIRM.toString() + "," + cancelledJobName, clientAddr, clientPort);
+
+                        jobManager.updateJobStatus(cancelledJob, JobStatus.CANCELLED);
+
+                        System.out.println("[INFO] Job '" + cancelledJob.getName() + "' cancelled\n");
                         System.out.println("[INFO] Current job list:\n" + jobManager.toString());
                     }
                 }

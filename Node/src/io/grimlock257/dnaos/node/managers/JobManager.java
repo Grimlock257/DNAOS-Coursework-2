@@ -88,6 +88,23 @@ public class JobManager {
     }
 
     /**
+     * Find the specified job object in the jobs LinkedHashMap using the supplied name
+     *
+     * @param jobName The name of the job to locate in the jobs LinkedHashMap
+     *
+     * @return The job object matching the name, or null if not found
+     */
+    public Job findByName(String jobName) {
+        for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getKey().getName().equals(jobName)) {
+                return jobDetails.getKey();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Used to display the jobs LinkedHashMap in a nice, readable format
      *
      * @return The formatted string

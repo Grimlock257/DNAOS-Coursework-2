@@ -10,4 +10,6 @@ package io.grimlock257.dnaos.client.job;
 public enum JobStatus {
     QUEUED,
     COMPLETE,
+    REQUESTED_CANCEL,
+    CANCELLED
 }

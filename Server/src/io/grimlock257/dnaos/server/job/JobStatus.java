@@ -11,5 +11,7 @@ public enum JobStatus {
     UNALLOCATED,
     BEING_ALLOCATED,
     ALLOCATED,
+    REQUESTED_CANCEL,
+    CANCELLED,
     SENT
 }

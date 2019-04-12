@@ -15,5 +15,7 @@ public enum MessageType {
     LB_SHUTDOWN,
     NODE_SHUTDOWN,
     REGISTER_CONFIRM,
+    CANCEL_JOB_REQUEST,
+    CANCEL_JOB_CONFIRM,
     UNKNOWN
 }
