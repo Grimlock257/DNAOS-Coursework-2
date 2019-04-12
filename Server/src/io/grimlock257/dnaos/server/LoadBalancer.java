@@ -32,6 +32,7 @@ public class LoadBalancer {
     private final int I_JOB_NAME = 1;
     private final int I_JOB_DURATION = 2;
     private final int I_COMPLETE_JOB_NAME = 1;
+    private final int I_SHUTDOWN_NODE_NAME = 1;
 
     // TODO: Temp - need Client representation class
     // Information about the connected client
@@ -157,6 +158,23 @@ public class LoadBalancer {
 
                 System.out.println("[INFO] Shutting down...");
                 System.exit(0);
+
+                break;
+            case NODE_SHUTDOWN_SPECIFIC:
+                System.out.println("[INFO] Received '" + message + "', processing...");
+
+                String shutdownNodeName = getValidStringArg(args, I_SHUTDOWN_NODE_NAME);
+
+                if (shutdownNodeName == null) {
+                    System.out.println("[ERROR] Node was not shutdown, some of the supplied information was invalid");
+                } else {
+                    Node shutdownNode = nodeManager.findByName(shutdownNodeName);
+
+                    nodeManager.shutdownNode(shutdownNode);
+
+                    System.out.println("\n[INFO] The following node has been removed: " + shutdownNode.toString());
+                    System.out.println("\n[INFO] Current nodes:\n" + nodeManager.toString());
+                }
 
                 break;
             case CLIENT_REGISTER:

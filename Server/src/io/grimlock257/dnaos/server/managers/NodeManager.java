@@ -100,6 +100,34 @@ public class NodeManager {
     }
 
     /**
+     * Send shutdown message to the specific node
+     *
+     * @param node The node to shutdown
+     */
+    public void shutdownNode(Node node) {
+        MessageManager.getInstance().send(MessageType.NODE_SHUTDOWN.toString(), node.getAddr(), node.getPort());
+
+        removeNode(node);
+    }
+
+    /**
+     * Find the specified node object in the nodes LinkedList using the supplied name
+     *
+     * @param nodeName The name of the node to locate in the nodes LinkedList
+     *
+     * @return The node object matching the name, or null if not found
+     */
+    public Node findByName(String nodeName) {
+        for (Node node : nodes) {
+            if (node.getName().equals(nodeName)) {
+                return node;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Used to display the nodes LinkedList in a nice, readable format
      *
      * @return The formatted string

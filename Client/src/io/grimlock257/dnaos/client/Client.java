@@ -188,6 +188,7 @@ public class Client {
 
         // Create a new job
         try {
+            // TODO: New job
             /*System.out.println("Enter job name:");
             System.out.print("> ");
             String jobName = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
@@ -205,11 +206,18 @@ public class Client {
 
             System.out.println("[INFO] Current job list:\n" + jobManager.toString());*/
 
-            System.out.print("> ");
+            // TODO: Shutdown LB + All nodes
+            /*System.out.print("> ");
             keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
 
             // TODO: Disconnect Client after sending LB_SHUTDOWN
-            messageManager.send(MessageType.LB_SHUTDOWN.toString(), lbAddr, lbPort);
+            messageManager.send(MessageType.LB_SHUTDOWN.toString(), lbAddr, lbPort);*/
+
+            // TODO: Shutdown specific node
+            System.out.print("> ");
+            String nodeToShutdown = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
+
+            messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
         } catch (NumberFormatException e) {
             System.out.println("[INPUT ERROR] Please enter an integer only");
         } catch (Exception e) {

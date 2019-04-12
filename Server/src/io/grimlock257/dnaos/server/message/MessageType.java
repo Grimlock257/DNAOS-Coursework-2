@@ -15,6 +15,7 @@ public enum MessageType {
     COMPLETE_JOB,
     LB_SHUTDOWN,
     NODE_SHUTDOWN,
+    NODE_SHUTDOWN_SPECIFIC,
     REGISTER_CONFIRM,
     UNKNOWN
 }
