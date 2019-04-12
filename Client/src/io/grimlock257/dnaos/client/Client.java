@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.EnumSet;
 
 /**
  * Represent the Client in the Client project
@@ -178,6 +179,18 @@ public class Client {
     }
 
     /**
+     * Represent valid menu options that the initiator can send to the load balancer
+     */
+    private enum CommandOptions {
+        NEW_JOB,
+        SHUTDOWN_ALL,
+        SHUTDOWN_SPECIFIC;
+
+        // Cache the values array to avoid calling it every time
+        public static final CommandOptions values[] = values();
+    }
+
+    /**
      * Get input from the user search as the command they want to issue, and any required arguments
      */
     private void getUserInput() {
@@ -186,38 +199,70 @@ public class Client {
 
         System.out.println("===============================================================================");
 
-        // Create a new job
+        // Ask the user for command information
         try {
-            // TODO: New job
-            /*System.out.println("Enter job name:");
+            // Ask what type of command to carry out
+            System.out.println("What command do you want to issue (Enter command number)?");
+            for (CommandOptions option : EnumSet.allOf(CommandOptions.class)) {
+                System.out.println(option.ordinal() + 1 + ") " + option.toString().replace("_", " "));
+            }
+
             System.out.print("> ");
-            String jobName = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
+            int menuSelection = Integer.parseInt(keyboard.readLine());
 
-            System.out.println("Enter job duration:");
-            System.out.print("> ");
-            int jobDuration = Integer.parseInt(keyboard.readLine());
-            Job newJob = new Job(jobName, jobDuration);
+            // Convert their number selection back to the enum value
+            CommandOptions selected = CommandOptions.values[menuSelection - 1];
 
-            jobManager.addJob(newJob);
+            // Provide the relevant input form depending on the menu option they selected
+            switch (selected) {
+                case NEW_JOB:
+                    System.out.print("Enter job name: ");
+                    String jobName = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
 
-            messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
+                    System.out.print("Enter job duration: ");
+                    int jobDuration = Integer.parseInt(keyboard.readLine());
+                    Job newJob = new Job(jobName, jobDuration);
 
-            System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
+                    jobManager.addJob(newJob);
 
-            System.out.println("[INFO] Current job list:\n" + jobManager.toString());*/
+                    messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
 
-            // TODO: Shutdown LB + All nodes
-            /*System.out.print("> ");
-            keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
+                    System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
+                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
-            // TODO: Disconnect Client after sending LB_SHUTDOWN
-            messageManager.send(MessageType.LB_SHUTDOWN.toString(), lbAddr, lbPort);*/
+                    break;
+                case SHUTDOWN_ALL:
+                    System.out.print("Are you sure you want to shutdown the load balancer and all nodes? (Y/N): ");
 
-            // TODO: Shutdown specific node
-            System.out.print("> ");
-            String nodeToShutdown = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
+                    String selection = keyboard.readLine().toLowerCase();
 
-            messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
+                    while (!selection.equals("y") && !selection.equals("n")) {
+                        System.out.println("[INPUT ERROR] Please enter either Y or N");
+                        System.out.print("> ");
+
+                        selection = keyboard.readLine().toLowerCase();
+                    }
+
+                    if (selection.equals("y")) {
+                        // TODO: Disconnect Client after sending LB_SHUTDOWN
+                        messageManager.send(MessageType.LB_SHUTDOWN.toString(), lbAddr, lbPort);
+                    } else {
+                        System.out.println("[INFO] Shutdown cancelled");
+                    }
+
+                    break;
+                case SHUTDOWN_SPECIFIC:
+                    System.out.print("Enter node name to shutdown: ");
+
+                    String nodeToShutdown = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
+
+                    messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
+                    // TODO: Get feedback (success boolean) ?
+
+                    break;
+                default:
+                    System.err.println("[ERROR] Something went wrong... unknown option '" + selected.toString() + "'");
+            }
         } catch (NumberFormatException e) {
             System.out.println("[INPUT ERROR] Please enter an integer only");
         } catch (Exception e) {
