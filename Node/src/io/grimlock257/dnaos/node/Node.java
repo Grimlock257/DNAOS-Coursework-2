@@ -93,6 +93,8 @@ public class Node {
             e.printStackTrace();
         } finally {
             try {
+                messageManager.stop();
+
                 socket.close();
             } catch (NullPointerException ignored) {
                 // We'll get a NullPointException (as the finally clause always runs) if the BindException
@@ -134,8 +136,6 @@ public class Node {
                     // Thread jobProcessing = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        System.out.println("Thread Name: " + Thread.currentThread().getName());
-
                         // Process the job
                         if (processJob(nextJob)) {
                             // Send the complete job back to the Load Balancer
@@ -262,7 +262,7 @@ public class Node {
      */
     private boolean processJob(Job job) {
         System.out.println("===============================================================================");
-        System.out.println("[INFO] Began processing job '" + job.getName() + "'...\n");
+        System.out.println("[INFO] Began processing job '" + job.getName() + "' in thread '" + Thread.currentThread().getName() + "'...\n");
         System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
         // Try sleep for the job duration

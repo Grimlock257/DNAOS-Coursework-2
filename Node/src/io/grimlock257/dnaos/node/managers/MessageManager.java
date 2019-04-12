@@ -18,6 +18,7 @@ import java.util.LinkedList;
 public class MessageManager {
     private static MessageManager instance = null;
 
+    private Thread receive;
     private DatagramSocket socket;
 
     private LinkedList<HashMap<String, Boolean>> messages;
@@ -76,9 +77,9 @@ public class MessageManager {
      */
     private void receive() {
         // Create a new thread to receive the incoming packet so that Node isn't blocked completely while waiting for a message
-        Thread receive = new Thread("node_receive_thread") {
+        receive = new Thread("node_receive_thread") {
             public void run() {
-                while (true) {
+                while (!interrupted()) {
                     // Byte buffer to store the message
                     byte[] buffer = new byte[2048];
 
@@ -153,5 +154,12 @@ public class MessageManager {
         }
 
         return null;
+    }
+
+    /**
+     * Stop the receive thread
+     */
+    public void stop() {
+        receive.interrupt();
     }
 }

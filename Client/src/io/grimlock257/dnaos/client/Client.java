@@ -90,6 +90,8 @@ public class Client {
             e.printStackTrace();
         } finally {
             try {
+                messageManager.stop();
+
                 socket.close();
             } catch (NullPointerException ignored) {
                 // We'll get a NullPointException (as the finally clause always runs) if the BindException
