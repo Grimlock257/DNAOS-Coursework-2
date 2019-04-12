@@ -173,6 +173,11 @@ public class Node {
 
                 break;
             case NEW_JOB:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String jobName = getValidStringArg(args, I_JOB_NAME);
@@ -191,6 +196,11 @@ public class Node {
 
                 break;
             case CANCEL_JOB_REQUEST:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String cancelJobName = getValidStringArg(args, I_CANCEL_REQUEST_JOB_NAME);
@@ -242,6 +252,11 @@ public class Node {
 
                 break;
             case NODE_SHUTDOWN:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.out.println("[INFO] Received '" + message + "', processing...");
                 System.out.println("[INFO] Shutting down...");
                 System.exit(0);
@@ -249,6 +264,11 @@ public class Node {
                 break;
             case UNKNOWN:
             default:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
     }
