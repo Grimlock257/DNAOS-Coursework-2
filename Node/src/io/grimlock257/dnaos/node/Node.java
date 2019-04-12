@@ -186,6 +186,12 @@ public class Node {
                 }
 
                 break;
+            case NODE_SHUTDOWN:
+                System.out.println("[INFO] Received '" + message + "', processing...");
+                System.out.println("[INFO] Shutting down...");
+                System.exit(0);
+
+                break;
             case UNKNOWN:
             default:
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");

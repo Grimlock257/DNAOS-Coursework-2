@@ -188,13 +188,13 @@ public class Client {
 
         // Create a new job
         try {
-            System.out.println("Enter job name:");
+            /*System.out.println("Enter job name:");
             System.out.print("> ");
             String jobName = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
 
-            //System.out.println("Enter job duration:");
-            //System.out.print("> ");
-            int jobDuration = 1;//Integer.parseInt(keyboard.readLine());
+            System.out.println("Enter job duration:");
+            System.out.print("> ");
+            int jobDuration = Integer.parseInt(keyboard.readLine());
             Job newJob = new Job(jobName, jobDuration);
 
             jobManager.addJob(newJob);
@@ -203,7 +203,13 @@ public class Client {
 
             System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
 
-            System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+            System.out.println("[INFO] Current job list:\n" + jobManager.toString());*/
+
+            System.out.print("> ");
+            keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
+
+            // TODO: Disconnect Client after sending LB_SHUTDOWN
+            messageManager.send(MessageType.LB_SHUTDOWN.toString(), lbAddr, lbPort);
         } catch (NumberFormatException e) {
             System.out.println("[INPUT ERROR] Please enter an integer only");
         } catch (Exception e) {

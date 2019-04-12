@@ -1,7 +1,9 @@
 package io.grimlock257.dnaos.server.managers;
 
+import io.grimlock257.dnaos.server.message.MessageType;
 import io.grimlock257.dnaos.server.node.Node;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
@@ -51,7 +53,6 @@ public class NodeManager {
      *
      * @param node The node to remove from the nodes LinkedList
      */
-    // TODO: Untested
     public void removeNode(Node node) {
         nodes.remove(node);
     }
@@ -75,6 +76,27 @@ public class NodeManager {
         }
 
         return freestNode;
+    }
+
+    /**
+     * Send shutdown message all connected nodes
+     */
+    public void shutdownAllNodes() {
+        // Create an iterator to iterate over the nodes ArrayList
+        Iterator<Node> itr = nodes.iterator();
+
+        // While there is another item, get that item and remove it
+        while (itr.hasNext()) {
+            Node node = itr.next();
+
+            // Send message to node saying shutdown
+            MessageManager.getInstance().send(MessageType.NODE_SHUTDOWN.toString(), node.getAddr(), node.getPort());
+
+            // Remove the node from the list
+            itr.remove();
+
+            System.out.println("Removed node: " + node.toString());
+        }
     }
 
     /**

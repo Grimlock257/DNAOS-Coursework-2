@@ -152,7 +152,10 @@ public class LoadBalancer {
         switch (getValidMessageType(args)) {
             case LB_SHUTDOWN:
                 System.out.println("[INFO] Received '" + message + "', processing...");
-                // TODO: Notify nodes
+
+                nodeManager.shutdownAllNodes();
+
+                System.out.println("[INFO] Shutting down...");
                 System.exit(0);
 
                 break;
