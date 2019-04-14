@@ -172,6 +172,19 @@ public class Node {
                 connected = true;
 
                 break;
+            case REGISTER_FAILURE:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                if (!connected) {
+                    System.out.println("[ERROR] Could not register with load balancer, duplicate node name or address / port combination present\n");
+                    System.out.println("[INFO] Shutting down...");
+
+                    System.exit(-1);
+                } else {
+                    System.out.println("[INFO] Ignoring as already registered with the load balancer...");
+                }
+
+                break;
             case NEW_JOB:
                 if (!connected) {
                     System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");

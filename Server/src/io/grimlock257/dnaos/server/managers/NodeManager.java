@@ -40,12 +40,23 @@ public class NodeManager {
     }
 
     /**
-     * Add a node to the nodes LinkedList
+     * Add a node to the nodes LinkedList providing a node of the same name doesn't already exist
+     * or the supplied address / port combination already exists
      *
      * @param node The node to add to the nodes LinkedList
+     *
+     * @return Whether or not the addition was successful, false is matching name or address / port combination found
      */
-    public void addNode(Node node) {
+    public boolean addNode(Node node) {
+        for (Node searchNode : nodes) {
+            if (searchNode.getName().equals(node.getName()) || (searchNode.getAddr().equals(node.getAddr()) && searchNode.getPort() == node.getPort())) {
+                return false;
+            }
+        }
+
         nodes.add(node);
+
+        return true;
     }
 
     /**

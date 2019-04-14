@@ -223,14 +223,20 @@ public class LoadBalancer {
                     InetAddress nodeAddr = InetAddress.getByName(nodeIP);
 
                     Node newNode = new Node(nodePort, nodeAddr, nodeCap, nodeName);
-                    nodeManager.addNode(newNode);
+                    boolean hasNodeAdded = nodeManager.addNode(newNode);
 
-                    System.out.println("[INFO] New node added: " + newNode.toString() + "\n");
+                    if (!hasNodeAdded) {
+                        System.out.println("[ERROR] Node was not added, some of the supplied information matched an existing node\n");
 
-                    messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
-                    System.out.println("");
+                        messageManager.send(MessageType.REGISTER_FAILURE.toString(), nodeAddr, nodePort);
+                    } else {
+                        System.out.println("[INFO] New node added: " + newNode.toString() + "\n");
 
-                    System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
+                        messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
+                        System.out.println("");
+
+                        System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
+                    }
                 }
 
                 break;
