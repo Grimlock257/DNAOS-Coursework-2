@@ -159,6 +159,19 @@ public class Client {
                 connected = true;
 
                 break;
+            case REGISTER_FAILURE:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                if (!connected) {
+                    System.out.println("[ERROR] Could not register with load balancer as it's already engaged with another client\n");
+                    System.out.println("[INFO] Shutting down...");
+
+                    System.exit(-1);
+                } else {
+                    System.out.println("[INFO] Ignoring as already registered with the load balancer...");
+                }
+
+                break;
             case COMPLETE_JOB:
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 

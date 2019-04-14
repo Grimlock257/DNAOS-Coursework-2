@@ -36,11 +36,12 @@ public class LoadBalancer {
     private final int I_CANCELLED_JOB_NAME = 1;
     private final int I_SHUTDOWN_NODE_NAME = 1;
 
-    // TODO: Temp - need Client representation class
     // Information about the connected client
     private String clientIP;
     private int clientPort;
     private InetAddress clientAddr;
+
+    private boolean clientConnected = false;
 
     // Information about the load balancer
     private int port = 0;
@@ -195,17 +196,28 @@ public class LoadBalancer {
             case CLIENT_REGISTER:
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
-                clientIP = getValidStringArg(args, I_CLIENT_IP);
-                clientPort = getValidIntArg(args, I_CLIENT_PORT);
+                String newClientIP = getValidStringArg(args, I_CLIENT_IP);
+                int newClientPort = getValidIntArg(args, I_CLIENT_PORT);
+                InetAddress newClientAddr = InetAddress.getByName(clientIP);
 
-                if (clientIP == null || clientPort == -1) {
+                if (newClientIP == null || newClientPort == -1) {
                     System.out.println("[ERROR] Client was not added, some of the supplied information was invalid");
                 } else {
-                    clientAddr = InetAddress.getByName(clientIP);
+                    if (clientConnected) {
+                        System.out.println("[ERROR] Client was not added, already connected to a client\n");
 
-                    System.out.println("[INFO] New client added: IP: " + clientIP + ", Port: " + clientPort + "\n");
+                        messageManager.send(MessageType.REGISTER_FAILURE.toString(), newClientAddr, newClientPort);
+                    } else {
+                        clientIP = newClientIP;
+                        clientPort = newClientPort;
+                        clientAddr = newClientAddr;
 
-                    messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
+                        System.out.println("[INFO] New client added: IP: " + clientIP + ", Port: " + clientPort + "\n");
+
+                        messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
+
+                        clientConnected = true;
+                    }
                 }
 
                 break;

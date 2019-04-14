@@ -10,6 +10,7 @@ package io.grimlock257.dnaos.client.message;
 public enum MessageType {
     CLIENT_REGISTER,
     REGISTER_CONFIRM,
+    REGISTER_FAILURE,
     NEW_JOB,
     COMPLETE_JOB,
     LB_SHUTDOWN,
