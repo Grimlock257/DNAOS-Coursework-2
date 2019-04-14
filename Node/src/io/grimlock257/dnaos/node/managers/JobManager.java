@@ -105,6 +105,32 @@ public class JobManager {
     }
 
     /**
+     * Formats a job as a string with it's allocation information
+     *
+     * @param jobName The job for which to represent in a string format
+     *
+     * @return The formatted string
+     */
+    public String jobToString(String jobName) {
+        StringBuilder sb = new StringBuilder();
+
+        // Iterate through the jobs LinkedHashMap, until we find the job matching the supplied name, once found
+        // append all information to a string to return to caller
+        for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getKey().getName().equals(jobName)) {
+                sb.append(jobDetails.getKey().toString());
+                sb.append(", ");
+                sb.append("Status: ");
+                sb.append(jobDetails.getValue().toString());
+
+                break;
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
      * Used to display the jobs LinkedHashMap in a nice, readable format
      *
      * @return The formatted string

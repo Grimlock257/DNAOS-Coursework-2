@@ -96,6 +96,10 @@ public class NodeManager {
             itr.remove();
 
             System.out.println("Node removed from node list: " + node.toString());
+
+            // If there's another entry in the iterator, add a new line
+            if (itr.hasNext())
+                System.out.println("");
         }
     }
 

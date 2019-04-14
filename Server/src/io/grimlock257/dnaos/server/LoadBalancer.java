@@ -128,14 +128,17 @@ public class LoadBalancer {
 
                 if (nextJob != null) {
                     System.out.println("===============================================================================");
-                    System.out.println("[INFO] Allocating job '" + nextJob.getName() + "'...\n");
+                    System.out.println("[INFO] Allocating job '" + nextJob.getName() + "' (now marked as " + JobStatus.BEING_ALLOCATED.toString() + ")...\n");
+                    System.out.println("[INFO] Current nodes:\n" + nodeManager.toString() + "\n");
+                    System.out.println("[INFO] Previous job list:\n" + jobManager.toString() + "\n");
 
                     jobManager.allocateJob(nextJob, freestNode);
-                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                    System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
 
                     messageManager.send(MessageType.NEW_JOB.toString() + "," + nextJob.getName() + "," + nextJob.getDuration(), freestNode.getAddr(), freestNode.getPort());
+                    System.out.println("");
 
-                    System.out.println("\n[INFO] Node '" + freestNode.getName() + "' utilization is now " + freestNode.calcUsage() + "% (max capacity is " + freestNode.getCapacity() + ")");
+                    System.out.println("[INFO] Node '" + freestNode.getName() + "' utilization is now " + freestNode.calcUsage() + "% (max capacity is " + freestNode.getCapacity() + ")");
                 }
             }
         }
@@ -155,6 +158,7 @@ public class LoadBalancer {
         System.out.println("===============================================================================");
 
         // Perform appropriate action depending on the message type
+        // TODO: When shutdown specific node, deallocate node
         switch (getValidMessageType(args)) {
             case LB_SHUTDOWN:
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
@@ -180,8 +184,9 @@ public class LoadBalancer {
                         System.out.println("[ERROR] Node was not shutdown as no node with name '" + shutdownNodeName + "' was found");
                     } else {
                         nodeManager.shutdownNode(shutdownNode);
+                        System.out.println("");
 
-                        System.out.println("[INFO] The following node has been removed: " + shutdownNode.toString() + "\n");
+                        System.out.println("[INFO] The following node has been removed:\n" + shutdownNode.toString() + "\n");
                         System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
                     }
                 }
@@ -198,7 +203,7 @@ public class LoadBalancer {
                 } else {
                     clientAddr = InetAddress.getByName(clientIP);
 
-                    System.out.println("[INFO] New client added: IP: " + clientIP + ", Port: " + clientPort);
+                    System.out.println("[INFO] New client added: IP: " + clientIP + ", Port: " + clientPort + "\n");
 
                     messageManager.send(MessageType.REGISTER_CONFIRM.toString(), clientAddr, clientPort);
                 }
@@ -223,6 +228,7 @@ public class LoadBalancer {
                     System.out.println("[INFO] New node added: " + newNode.toString() + "\n");
 
                     messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
+                    System.out.println("");
 
                     System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
                 }
@@ -259,12 +265,18 @@ public class LoadBalancer {
                     if (completedJob == null) {
                         System.out.println("[ERROR] Job was not marked as complete or sent to the client as no job with name '" + completedJobName + "' was found");
                     } else {
+                        Node completedJobNode = jobManager.getNodeByJob(completedJobName);
+                        System.out.println("[INFO] Previous job information for job '" + completedJob.getName() + "':\n" + jobManager.jobToString(completedJobName) + "\n");
+                        System.out.println("[INFO] Previous node information for node '" + completedJobNode.getName() + "':\n" + completedJobNode.toString() + "\n");
+
                         messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, clientAddr, clientPort);
+                        System.out.println("");
 
                         jobManager.updateJobStatus(completedJob, JobStatus.SENT);
 
                         System.out.println("[INFO] Job '" + completedJob.getName() + "' is complete and sent to the client\n");
-                        System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                        System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
+                        System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
                     }
                 }
 
@@ -287,7 +299,10 @@ public class LoadBalancer {
                         if (jobNode == null) {
                             System.out.println("[ERROR] The node allocated to the job could not be found");
                         } else {
+                            System.out.println("[INFO] Previous job information for job '" + cancelJob.getName() + "':\n" + jobManager.jobToString(cancelJobName) + "\n");
+
                             messageManager.send(MessageType.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, jobNode.getAddr(), jobNode.getPort());
+                            System.out.println("");
 
                             jobManager.updateJobStatus(cancelJob, JobStatus.REQUESTED_CANCEL);
 
@@ -311,7 +326,10 @@ public class LoadBalancer {
                     if (cancelledJob == null) {
                         System.out.println("[ERROR] Job was not marked as cancelled or sent to the client as no job with name '" + cancelledJobName + "' was found");
                     } else {
+                        System.out.println("[INFO] Previous job information for job '" + cancelledJob.getName() + "':\n" + jobManager.jobToString(cancelledJobName) + "\n");
+
                         messageManager.send(MessageType.CANCEL_JOB_CONFIRM.toString() + "," + cancelledJobName, clientAddr, clientPort);
+                        System.out.println("");
 
                         jobManager.updateJobStatus(cancelledJob, JobStatus.CANCELLED);
 

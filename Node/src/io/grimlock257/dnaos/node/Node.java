@@ -133,7 +133,6 @@ public class Node {
             if (nextJob != null) {
                 // A new thread is created for each job to be ran
                 Thread jobProcessing = new Thread("job_processing_" + nextJob.getName().toLowerCase().replace(" ", "_")) {
-                    // Thread jobProcessing = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         // Process the job
@@ -141,6 +140,7 @@ public class Node {
                             // Send the complete job back to the Load Balancer
                             MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getName(), lbAddr, lbPort);
                             JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
+                            System.out.println("");
 
                             System.out.println("[INFO] Job '" + nextJob.getName() + "' has been sent to the Load Balancer\n");
                             System.out.println("[INFO] Current job list:\n" + jobManager.toString());
@@ -213,6 +213,8 @@ public class Node {
                     if (cancelJob == null) {
                         System.out.println("[ERROR] Job was not cancelled as no job with name '" + cancelJobName + "' was found");
                     } else {
+                        System.out.println("[INFO] Previous job information for job '" + cancelJob.getName() + "':\n" + jobManager.jobToString(cancelJobName) + "\n");
+
                         System.out.println("[INFO] Alive threads before:");
 
                         // Iterate through the set of threads, printing the name of each
@@ -242,6 +244,7 @@ public class Node {
                             }
                         }
 
+                        System.out.println("");
                         messageManager.send(MessageType.CANCEL_JOB_CONFIRM.toString() + "," + cancelJobName, lbAddr, lbPort);
 
                         jobManager.updateJobStatus(cancelJob, JobStatus.CANCELLED);
@@ -292,11 +295,13 @@ public class Node {
             return false;
         }
 
+        System.out.println("===============================================================================");
+        System.out.println("[INFO] Job '" + job.getName() + "' complete\n");
+        System.out.println("[INFO] Previous job information for job '" + job.getName() + "':\n" + jobManager.jobToString(job.getName()) + "\n");
+
         // Update the job status to COMPLETE
         JobManager.getInstance().updateJobStatus(job, JobStatus.COMPLETE);
 
-        System.out.println("===============================================================================");
-        System.out.println("[INFO] Job '" + job.getName() + "' complete\n");
         System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
 
         return true;

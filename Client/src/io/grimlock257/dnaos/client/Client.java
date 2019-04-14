@@ -127,6 +127,7 @@ public class Client {
             } else if (!hasSentRegister) {
                 System.out.println("Connecting to load balancer...");
                 messageManager.send(MessageType.CLIENT_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.port, lbAddr, lbPort);
+                System.out.println("");
                 hasSentRegister = true;
             }
 
@@ -270,7 +271,7 @@ public class Client {
 
                             messageManager.send(MessageType.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, lbAddr, lbPort);
 
-                            System.out.println("[INFO] Job cancel request has been issued");
+                            System.out.println("\n[INFO] Job cancel request has been issued");
                         }
                     }
 
@@ -290,6 +291,7 @@ public class Client {
                     if (selection.equals("y")) {
                         // TODO: Disconnect Client after sending LB_SHUTDOWN
                         messageManager.send(MessageType.LB_SHUTDOWN.toString(), lbAddr, lbPort);
+                        System.out.println("\n[INFO] Current job list:\n" + jobManager.toString() + "\n");
                     } else {
                         System.out.println("[INFO] Shutdown cancelled");
                     }
@@ -301,6 +303,8 @@ public class Client {
                     String nodeToShutdown = keyboard.readLine(); // TODO: Validation // TODO: Duplicate check
 
                     messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
+                    System.out.println("");
+
                     // TODO: Get feedback (success boolean) ?
 
                     break;

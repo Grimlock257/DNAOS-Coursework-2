@@ -66,6 +66,8 @@ public class MessageManager {
         try {
             DatagramPacket packet = new DatagramPacket(message.getBytes(), message.getBytes().length, address, port);
             socket.send(packet);
+
+            System.out.println("[INFO] Sent message '" + message + "' to '" + address + ":" + port + "'");
         } catch (IOException e) {
             System.err.println("[ERROR] The packet could not be sent due to IOException");
         }

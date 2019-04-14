@@ -73,11 +73,11 @@ public class JobManager {
                 jobDetails.getValue().setJobStatus(JobStatus.ALLOCATED);
                 jobDetails.getValue().setNode(node);
 
-                System.out.println("[INFO] Job '" + job.getName() + "' been allocated to '" + node.getName() + "'");
+                System.out.println("[INFO] Job '" + job.getName() + "' been allocated to '" + node.getName() + "'\n");
             } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.ALLOCATED) {
-                System.out.println("[ERROR] Job '" + job.getName() + "' has already been allocated");
+                System.out.println("[ERROR] Job '" + job.getName() + "' has already been allocated\n");
             } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.UNALLOCATED) {
-                System.out.println("[ERROR] Job '" + job.getName() + "' is not ready to be allocated yet");
+                System.out.println("[ERROR] Job '" + job.getName() + "' is not ready to be allocated yet\n");
             }
         }
     }
@@ -177,6 +177,32 @@ public class JobManager {
         }
 
         return null;
+    }
+
+    /**
+     * Formats a job as a string with it's allocation information
+     *
+     * @param jobName The job for which to represent in a string format
+     *
+     * @return The formatted string
+     */
+    public String jobToString(String jobName) {
+        StringBuilder sb = new StringBuilder();
+
+        // Iterate through the jobs LinkedHashMap, until we find the job matching the supplied name, once found
+        // append all information to a string to return to caller
+        for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getKey().getName().equals(jobName)) {
+                sb.append(jobDetails.getKey().toString());
+                sb.append(" --- ");
+                sb.append("Allocation Information: ");
+                sb.append(jobDetails.getValue().toString());
+
+                break;
+            }
+        }
+
+        return sb.toString();
     }
 
     /**
