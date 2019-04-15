@@ -80,7 +80,6 @@ public class LoadBalancer {
 
             // Have setup first?
             loop();
-            // TODO: MessageManager.receive thread is still running - causes continuous socket closed exceptions
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
                 System.err.println("[ERROR] Port " + port + " is already in use, please select another port via the command line arguments");
@@ -121,7 +120,6 @@ public class LoadBalancer {
             }
 
             // Allocate a job (if available)
-            // TODO: Thread this?
             Node freestNode = nodeManager.getFreestNode();
 
             if (freestNode != null) {
@@ -159,7 +157,6 @@ public class LoadBalancer {
         System.out.println("===============================================================================");
 
         // Perform appropriate action depending on the message type
-        // TODO: When shutdown specific node, deallocate node
         switch (getValidMessageType(args)) {
             case LB_SHUTDOWN:
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
@@ -172,6 +169,7 @@ public class LoadBalancer {
 
                 break;
             case NODE_SHUTDOWN_SPECIFIC:
+                // TODO: When shutdown specific node, deallocate node
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String shutdownNodeName = getValidStringArg(args, I_SHUTDOWN_NODE_NAME);

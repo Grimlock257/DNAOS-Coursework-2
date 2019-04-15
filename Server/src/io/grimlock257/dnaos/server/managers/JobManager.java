@@ -51,16 +51,6 @@ public class JobManager {
     }
 
     /**
-     * Remove a job from the jobs LinkedHashMap
-     *
-     * @param job The job to remove from the jobs LinkedHashMap
-     */
-    // TODO: Untested
-    public void removeJob(Job job) {
-        this.jobs.remove(job);
-    }
-
-    /**
      * Allocate a specified job to a specific node
      *
      * @param job  The job that is being allocated

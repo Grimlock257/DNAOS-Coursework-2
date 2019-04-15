@@ -49,16 +49,6 @@ public class JobManager {
     }
 
     /**
-     * Remove a job from the jobs LinkedHashMap
-     *
-     * @param job The job to remove from the jobs LinkedHashMap
-     */
-    // TODO: Untested
-    public void removeJob(Job job) {
-        this.jobs.remove(job);
-    }
-
-    /**
      * Update the JobStatus of a job
      *
      * @param job       The job that has the JobStatus to be updated

@@ -121,7 +121,6 @@ public class Node {
             // Process messages (if available)
             String nextMessage = messageManager.getNextMessage();
 
-            // TODO: Related to TODO: Causing block - thread the processMessage();
             if (nextMessage != null) {
                 processMessage(nextMessage);
             }

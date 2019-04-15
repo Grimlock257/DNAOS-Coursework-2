@@ -59,16 +59,6 @@ public class JobManager {
     }
 
     /**
-     * Remove a job from the jobs LinkedHashMap
-     *
-     * @param job The job to remove from the jobs LinkedHashMap
-     */
-    // TODO: Untested
-    public void removeJob(Job job) {
-        this.jobs.remove(job);
-    }
-
-    /**
      * Get the status of a job with the specified name
      *
      * @param jobName The job to find the status off
