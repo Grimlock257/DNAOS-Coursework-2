@@ -258,12 +258,16 @@ public class Client {
                     int jobDuration = Integer.parseInt(keyboard.readLine());
                     Job newJob = new Job(jobName, jobDuration);
 
-                    jobManager.addJob(newJob);
+                    boolean hasJobAdded = jobManager.addJob(newJob);
 
-                    messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
+                    if (!hasJobAdded) {
+                        System.out.println("[ERROR] Job was not added, the supplied information matched an existing job\n");
+                    } else {
+                        messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
 
-                    System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
-                    System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                        System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
+                        System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+                    }
 
                     break;
                 case CANCEL_JOB:

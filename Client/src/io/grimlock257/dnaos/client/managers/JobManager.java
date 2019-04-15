@@ -40,12 +40,22 @@ public class JobManager {
     }
 
     /**
-     * Add a job to the jobs LinkedHashMap
+     * Add a job to the jobs LinkedHashMap providing a job of the same name doesn't already exist
      *
      * @param job The job to add to the jobs LinkedHashMap
+     *
+     * @return Whether or not the addition was successful, false is matching name
      */
-    public void addJob(Job job) {
+    public boolean addJob(Job job) {
+        for (Map.Entry<Job, JobStatus> searchJob : jobs.entrySet()) {
+            if (searchJob.getKey().getName().equals(job.getName())) {
+                return false;
+            }
+        }
+
         this.jobs.put(job, JobStatus.QUEUED);
+
+        return true;
     }
 
     /**
