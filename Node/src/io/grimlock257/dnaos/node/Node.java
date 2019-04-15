@@ -126,7 +126,6 @@ public class Node {
                 processMessage(nextMessage);
             }
 
-            // TODO: Capacity check? Shouldn't be required as Load Balancer shouldn't send more jobs than capacity
             // Process a job (if available)
             Job nextJob = jobManager.getNextJob();
 

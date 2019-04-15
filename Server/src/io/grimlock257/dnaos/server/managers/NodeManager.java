@@ -79,9 +79,9 @@ public class NodeManager {
         // Iterate over the nodes LinkedList, checking the usage of the current found freest
         // Node and comparing it with the current iteration node
         for (Node node : nodes) {
-            if (freestNode == null) {
+            if (freestNode == null && node.calcUsage() < 100) {
                 freestNode = node;
-            } else if (node.calcUsage() < freestNode.calcUsage()) {
+            } else if (freestNode != null && node.calcUsage() < freestNode.calcUsage()) {
                 freestNode = node;
             }
         }
