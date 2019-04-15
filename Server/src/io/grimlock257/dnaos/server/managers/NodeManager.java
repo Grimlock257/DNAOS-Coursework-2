@@ -106,6 +106,9 @@ public class NodeManager {
             // Remove the node from the list
             itr.remove();
 
+            // Deallocate jobs relating to the current node
+            JobManager.getInstance().deallocateJobs(node);
+
             System.out.println("Node removed from node list: " + node.toString());
 
             // If there's another entry in the iterator, add a new line
@@ -121,8 +124,12 @@ public class NodeManager {
      */
     public void shutdownNode(Node node) {
         MessageManager.getInstance().send(MessageType.NODE_SHUTDOWN.toString(), node.getAddr(), node.getPort());
+        System.out.println("");
 
         removeNode(node);
+
+        // Deallocate jobs relating to the specified node
+        JobManager.getInstance().deallocateJobs(node);
     }
 
     /**

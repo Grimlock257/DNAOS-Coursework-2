@@ -73,6 +73,23 @@ public class JobManager {
     }
 
     /**
+     * Deallocate any jobs associated with the supplied node
+     *
+     * @param node The node to deallocate jobs from
+     */
+    public void deallocateJobs(Node node) {
+        // Iterate through the jobs LinkedHashMap to find jobs allocated to the supplied node
+        for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getValue().getJobStatus() != JobStatus.SENT && jobDetails.getValue().getNode().equals(node)) {
+                jobDetails.getValue().setJobStatus(JobStatus.UNALLOCATED);
+                jobDetails.getValue().setNode(null);
+
+                System.out.println("[INFO] Job '" + jobDetails.getKey().getName() + "' been deallocated from node '" + node.getName() + "'");
+            }
+        }
+    }
+
+    /**
      * Update the JobStatus of a job
      *
      * @param job       The job that has the JobStatus to be updated

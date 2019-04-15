@@ -169,7 +169,6 @@ public class LoadBalancer {
 
                 break;
             case NODE_SHUTDOWN_SPECIFIC:
-                // TODO: When shutdown specific node, deallocate node
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String shutdownNodeName = getValidStringArg(args, I_SHUTDOWN_NODE_NAME);
