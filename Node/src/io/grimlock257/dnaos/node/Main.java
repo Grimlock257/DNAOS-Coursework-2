@@ -47,7 +47,8 @@ public class Main {
             System.out.println("[INFO] - Load Balancer Port: " + lbPort);
             System.out.println("===============================================================================");
 
-            new Node(name, capacity, port, lbHost, lbPort);
+            Node node = new Node(name, capacity, port, lbHost, lbPort);
+            node.start();
         } else {
             System.err.println("[ERROR] Invalid arguments supplied! Usage: java node <name> <capacity> <port> <load balancer host address> <load balancer port>");
         }

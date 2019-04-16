@@ -29,8 +29,6 @@ public class MessageManager {
      */
     private MessageManager() {
         this.messages = new LinkedList<>();
-
-        this.receive();
     }
 
     /**
@@ -47,12 +45,14 @@ public class MessageManager {
     }
 
     /**
-     * Setup the socket for the MessageManager to use
+     * Setup the socket for the MessageManager to use, then start the receive thread
      *
      * @param socket The socket to use when sending and receiving UDP packets
      */
     public void init(DatagramSocket socket) {
         this.socket = socket;
+
+        this.receive();
     }
 
     /**

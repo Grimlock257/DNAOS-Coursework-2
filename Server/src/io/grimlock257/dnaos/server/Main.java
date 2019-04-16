@@ -39,7 +39,8 @@ public class Main {
             System.out.println("[INFO] - Port: " + port);
             System.out.println("===============================================================================");
 
-            new LoadBalancer(port);
+            LoadBalancer loadBalancer = new LoadBalancer(port);
+            loadBalancer.start();
         } else {
             System.err.println("[ERROR] Invalid arguments supplied! Usage: java loadbalancer <port>");
         }

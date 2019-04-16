@@ -43,7 +43,8 @@ public class Main {
             System.out.println("[INFO] - Load Balancer Port: " + lbPort);
             System.out.println("===============================================================================");
 
-            new Client(port, lbHost, lbPort);
+            Client client = new Client(port, lbHost, lbPort);
+            client.start();
         } else {
             System.err.println("[ERROR] Invalid arguments supplied! Usage: java client <port> <load balancer host address> <load balancer port>");
         }

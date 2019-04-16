@@ -61,14 +61,12 @@ public class LoadBalancer {
      */
     public LoadBalancer(int port) {
         this.port = port;
-
-        start();
     }
 
     /**
-     * Try to open the DatagramSocket, if successful create the managers and begin the main loop
+     * Try to open the DatagramSocket, if successful create the managers, connect and begin the main loop
      */
-    private void start() {
+    public void start() {
         try {
             socket = new DatagramSocket(port);
             socket.setSoTimeout(0);

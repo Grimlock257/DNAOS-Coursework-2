@@ -36,8 +36,6 @@ public class Client {
     private final int RECONNECTION_TIME = 4 * 1000;
 
     private boolean connected = false;
-    private boolean hasSentRegister = false; // TODO: Better method of implementing this
-    private boolean hasBeganUserInputThread = false; // TODO: Better method of implementing this
 
     // Information about the client
     private int port;
@@ -54,9 +52,8 @@ public class Client {
     private MessageManager messageManager;
     private JobManager jobManager;
 
-    // Keyboard access for user input
-    InputStreamReader input;
-    BufferedReader keyboard;
+    // Store a reference to the keyboard
+    private BufferedReader keyboard;
 
     /**
      * Create a new client instance
@@ -70,14 +67,12 @@ public class Client {
 
         this.lbHost = lbHost;
         this.lbPort = lbPort;
-
-        start();
     }
 
     /**
-     * Try to open the DatagramSocket, if successful create the managers and begin the main loop
+     * Try to open the DatagramSocket, if successful create the managers, connect and begin the main loop
      */
-    private void start() {
+    public void start() {
         try {
             socket = new DatagramSocket(port);
             socket.setSoTimeout(0);
@@ -86,8 +81,7 @@ public class Client {
             messageManager.init(socket);
             jobManager = JobManager.getInstance();
 
-            input = new InputStreamReader(System.in);
-            keyboard = new BufferedReader(input);
+            keyboard = new BufferedReader(new InputStreamReader(System.in));
 
             lbAddr = InetAddress.getByName(lbHost);
 
@@ -156,24 +150,19 @@ public class Client {
      * Check for incoming packets, and send any packets to be processed
      */
     private void loop() {
-        while (true) {
-            if (!hasBeganUserInputThread) {
-                // A new thread is created for each job to be ran
-                Thread userInput = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Get input from the user forever
-                        while (true) {
-                            getUserInput();
-                        }
-                    }
-                });
-
-                userInput.start();
-
-                hasBeganUserInputThread = true;
+        // Create a thread to continuously get user input
+        Thread userInput = new Thread("initiator_user_input") {
+            @Override
+            public void run() {
+                while (true) {
+                    getUserInput();
+                }
             }
+        };
 
+        userInput.start();
+
+        while (true) {
             // Process messages (if available)
             String nextMessage = messageManager.getNextMessage();
 
@@ -496,7 +485,6 @@ public class Client {
 
         return userInput;
     }
-
 
     /**
      * Validate the MessageType of the message
