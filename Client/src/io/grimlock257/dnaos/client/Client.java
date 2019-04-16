@@ -28,6 +28,7 @@ public class Client {
     private final int I_COMPLETE_JOB_NAME = 1;
     private final int I_CANCELLED_JOB_NAME = 1;
     private final int I_SHUTDOWN_NODE_FAILURE_NAME = 1;
+    private final int I_SHUTDOWN_NODE_SUCCESS_NAME = 1;
 
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
@@ -223,6 +224,18 @@ public class Client {
                     System.out.println("[ERROR] Some of the supplied information was invalid");
                 } else {
                     System.out.println("[INFO] The requested shutdown of '" + shutdownFailedNodeName + "' could not be carried out as it was not found on the Load Balancer\n");
+                }
+
+                break;
+            case NODE_SHUTDOWN_SPECIFIC_SUCCESS:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String shutdownSuccessNodeName = getValidStringArg(args, I_SHUTDOWN_NODE_SUCCESS_NAME);
+
+                if (shutdownSuccessNodeName == null) {
+                    System.out.println("[ERROR] Some of the supplied information was invalid");
+                } else {
+                    System.out.println("[INFO] The requested shutdown of '" + shutdownSuccessNodeName + "' was successful\n");
                 }
 
                 break;

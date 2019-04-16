@@ -186,9 +186,12 @@ public class LoadBalancer {
                         System.out.println("\n[INFO] Client has been notified of failure to shutdown the node");
                     } else {
                         nodeManager.shutdownNode(shutdownNode);
-                        System.out.println("");
 
                         System.out.println("[INFO] The following node has been removed:\n" + shutdownNode.toString() + "\n");
+
+                        messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC_SUCCESS.toString() + "," + shutdownNodeName, clientAddr, clientPort);
+
+                        System.out.println("\n[INFO] Client has been notified of successful node shutdown");
                         System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
                     }
                 }
