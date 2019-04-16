@@ -13,6 +13,8 @@ import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.EnumSet;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Represent the Client in the Client project
@@ -29,6 +31,9 @@ public class Client {
     private final int I_CANCELLED_JOB_NAME = 1;
     private final int I_SHUTDOWN_NODE_FAILURE_NAME = 1;
     private final int I_SHUTDOWN_NODE_SUCCESS_NAME = 1;
+
+    // How frequently to reattempt connection to the load balancer
+    private final int RECONNECTION_TIME = 4 * 1000;
 
     private boolean connected = false;
     private boolean hasSentRegister = false; // TODO: Better method of implementing this
@@ -84,7 +89,9 @@ public class Client {
             input = new InputStreamReader(System.in);
             keyboard = new BufferedReader(input);
 
-            // Have setup first?
+            lbAddr = InetAddress.getByName(lbHost);
+
+            connect();
             loop();
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
@@ -110,15 +117,47 @@ public class Client {
     }
 
     /**
-     * Check for incoming packets, and send any packets to be processed
-     *
-     * @throws IOException When keyboard input can not be retrieved
+     * Set up the connection between the Node and the Load Balancer. Repeatedly send a register message
+     * to the Load Balancer at a specified interval until a REGISTER_CONFIRM message is received
      */
-    private void loop() throws IOException {
-        lbAddr = InetAddress.getByName(lbHost);
+    private void connect() {
+        System.out.println("Connecting to load balancer...");
 
+        // Create a Timer utilising a TimerTask to resend a register message at a specified time interval if not registered
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    // Send register message to the Load Balancer
+                    messageManager.send(MessageType.CLIENT_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + port, lbAddr, lbPort);
+                } catch (Exception e) {
+                    System.err.println("[ERROR] Unhandled Exception thrown");
+                    e.printStackTrace();
+                }
+            }
+        }, 0, RECONNECTION_TIME);
+
+        // Keep retrieving next message until a REGISTER_CONFIRM is received, which sets boolean connected to true
+        while (!connected) {
+            // Process messages (if available)
+            String nextMessage = messageManager.getNextMessage();
+
+            if (nextMessage != null) {
+                processMessage(nextMessage);
+            }
+        }
+
+        // The while loop has ended which means we have successfully connected; terminate the timer
+        timer.cancel();
+    }
+
+    /**
+     * Check for incoming packets, and send any packets to be processed
+     */
+    private void loop() {
         while (true) {
-            if (connected && !hasBeganUserInputThread) {
+            if (!hasBeganUserInputThread) {
                 // A new thread is created for each job to be ran
                 Thread userInput = new Thread(new Runnable() {
                     @Override
@@ -133,11 +172,6 @@ public class Client {
                 userInput.start();
 
                 hasBeganUserInputThread = true;
-            } else if (!hasSentRegister) {
-                System.out.println("Connecting to load balancer...");
-                messageManager.send(MessageType.CLIENT_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.port, lbAddr, lbPort);
-                System.out.println("");
-                hasSentRegister = true;
             }
 
             // Process messages (if available)
@@ -182,6 +216,11 @@ public class Client {
 
                 break;
             case COMPLETE_JOB:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String jobName = getValidStringArg(args, I_COMPLETE_JOB_NAME);
@@ -199,6 +238,11 @@ public class Client {
 
                 break;
             case CANCEL_JOB_CONFIRM:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String cancelledJobName = getValidStringArg(args, I_CANCELLED_JOB_NAME);
@@ -216,6 +260,11 @@ public class Client {
 
                 break;
             case NODE_SHUTDOWN_SPECIFIC_FAILURE:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String shutdownFailedNodeName = getValidStringArg(args, I_SHUTDOWN_NODE_FAILURE_NAME);
@@ -228,6 +277,11 @@ public class Client {
 
                 break;
             case NODE_SHUTDOWN_SPECIFIC_SUCCESS:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.out.println("[INFO] Received '" + message + "', processing...\n");
 
                 String shutdownSuccessNodeName = getValidStringArg(args, I_SHUTDOWN_NODE_SUCCESS_NAME);
@@ -241,6 +295,11 @@ public class Client {
                 break;
             case UNKNOWN:
             default:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
     }

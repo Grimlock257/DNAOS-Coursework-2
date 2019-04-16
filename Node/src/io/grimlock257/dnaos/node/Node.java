@@ -6,10 +6,11 @@ import io.grimlock257.dnaos.node.managers.JobManager;
 import io.grimlock257.dnaos.node.managers.MessageManager;
 import io.grimlock257.dnaos.node.message.MessageType;
 
-import java.io.IOException;
 import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Represent the Node in the Node project
@@ -26,8 +27,10 @@ public class Node {
     private final int I_JOB_DURATION = 2;
     private final int I_CANCEL_REQUEST_JOB_NAME = 1;
 
+    // How frequently to reattempt connection to the load balancer
+    private final int RECONNECTION_TIME = 4 * 1000;
+
     private boolean connected = false;
-    private boolean hasSentRegister = false; // TODO: Better method of implementing this
 
     // Information about the node
     private String name;
@@ -78,7 +81,9 @@ public class Node {
             messageManager.init(socket);
             jobManager = JobManager.getInstance();
 
-            // Have setup first?
+            lbAddr = InetAddress.getByName(lbHost);
+
+            connect();
             loop();
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
@@ -104,20 +109,46 @@ public class Node {
     }
 
     /**
-     * Check for incoming packets, and send any packets to be processed
-     *
-     * @throws IOException When keyboard input can not be retrieved
+     * Set up the connection between the Node and the Load Balancer. Repeatedly send a register message
+     * to the Load Balancer at a specified interval until a REGISTER_CONFIRM message is received
      */
-    private void loop() throws IOException {
-        lbAddr = InetAddress.getByName(lbHost);
+    private void connect() {
+        System.out.println("Connecting to load balancer...");
 
-        while (true) {
-            if (!hasSentRegister) {
-                System.out.println("Connecting to load balancer...");
-                messageManager.send(MessageType.NODE_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + this.port + "," + this.name + "," + this.capacity, lbAddr, lbPort);
-                hasSentRegister = true;
+        // Create a Timer utilising a TimerTask to resend a register message at a specified time interval if not registered
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    // Send register message to the Load Balancer
+                    messageManager.send(MessageType.NODE_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + port + "," + name + "," + capacity, lbAddr, lbPort);
+                } catch (Exception e) {
+                    System.err.println("[ERROR] Unhandled Exception thrown");
+                    e.printStackTrace();
+                }
             }
+        }, 0, RECONNECTION_TIME);
 
+        // Keep retrieving next message until a REGISTER_CONFIRM is received, which sets boolean connected to true
+        while (!connected) {
+            // Process messages (if available)
+            String nextMessage = messageManager.getNextMessage();
+
+            if (nextMessage != null) {
+                processMessage(nextMessage);
+            }
+        }
+
+        // The while loop has ended which means we have successfully connected; terminate the timer
+        timer.cancel();
+    }
+
+    /**
+     * Check for incoming packets, and send any packets to be processed
+     */
+    private void loop() {
+        while (true) {
             // Process messages (if available)
             String nextMessage = messageManager.getNextMessage();
 
