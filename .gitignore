@@ -10,6 +10,14 @@ Server/Server.iml
 Server/bin/
 Server/src/META-INF/
 
+LoadBalancer/LoadBalancer.iml
+LoadBalancer/bin/
+LoadBalancer/src/META-INF/
+
 Client/Client.iml
 Client/bin/
 Client/src/META-INF/
+
+Initiator/Initiator.iml
+Initiator/bin/
+Initiator/src/META-INF/
