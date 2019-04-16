@@ -83,6 +83,8 @@ public class NodeManager {
                 freestNode = node;
             } else if (freestNode != null && node.calcUsage() < freestNode.calcUsage()) {
                 freestNode = node;
+            } else if (freestNode != null && node.calcUsage() == freestNode.calcUsage() && node.getCapacity() > freestNode.getCapacity()) {
+                freestNode = node;
             }
         }
 
