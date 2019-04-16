@@ -185,12 +185,12 @@ public class LoadBalancer {
                     } else {
                         nodeManager.shutdownNode(shutdownNode);
 
-                        System.out.println("[INFO] The following node has been removed:\n" + shutdownNode.toString() + "\n");
+                        System.out.println("\n[INFO] The following node has been removed:\n" + shutdownNode.toString() + "\n");
 
                         messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC_SUCCESS.toString() + "," + shutdownNodeName, initiatorAddr, initiatorPort);
 
                         System.out.println("\n[INFO] Initiator has been notified of successful node shutdown");
-                        System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
+                        System.out.println("\n[INFO] Current nodes:\n" + nodeManager.toString());
                     }
                 }
 

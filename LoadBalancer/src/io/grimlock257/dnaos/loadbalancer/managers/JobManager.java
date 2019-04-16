@@ -80,7 +80,7 @@ public class JobManager {
     public void deallocateJobs(Node node) {
         // Iterate through the jobs LinkedHashMap to find jobs allocated to the supplied node
         for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
-            if (jobDetails.getValue().getJobStatus() != JobStatus.SENT && jobDetails.getValue().getNode().equals(node)) {
+            if (jobDetails.getValue().getJobStatus() != JobStatus.SENT && jobDetails.getValue().getNode() != null && jobDetails.getValue().getNode().equals(node)) {
                 jobDetails.getValue().setJobStatus(JobStatus.UNALLOCATED);
                 jobDetails.getValue().setNode(null);
 
