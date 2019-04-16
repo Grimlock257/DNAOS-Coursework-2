@@ -179,7 +179,11 @@ public class LoadBalancer {
                     Node shutdownNode = nodeManager.findByName(shutdownNodeName);
 
                     if (shutdownNode == null) {
-                        System.out.println("[ERROR] Node was not shutdown as no node with name '" + shutdownNodeName + "' was found");
+                        System.out.println("[ERROR] Node was not shutdown as no node with name '" + shutdownNodeName + "' was found\n");
+
+                        messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC_FAILURE.toString() + "," + shutdownNodeName, clientAddr, clientPort);
+
+                        System.out.println("\n[INFO] Client has been notified of failure to shutdown the node");
                     } else {
                         nodeManager.shutdownNode(shutdownNode);
                         System.out.println("");
