@@ -78,6 +78,31 @@ public class JobManager {
     }
 
     /**
+     * @return The jobs LinkedHashMap
+     */
+    public LinkedHashMap<Job, JobStatus> getJobs() {
+        return jobs;
+    }
+
+    /**
+     * Get the number of jobs that are currently in progress
+     *
+     * @return The number of jobs in progress
+     */
+    public int getAmountOfActiveJobs() {
+        int amountOfJobs = 0;
+
+        // Iterate through the jobs LinkedHashMap and see if the JobStatus is set to IN_PROGRESS
+        for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getValue() == JobStatus.IN_PROGRESS) {
+                amountOfJobs++;
+            }
+        }
+
+        return amountOfJobs;
+    }
+
+    /**
      * Find the specified job object in the jobs LinkedHashMap using the supplied name
      *
      * @param jobName The name of the job to locate in the jobs LinkedHashMap

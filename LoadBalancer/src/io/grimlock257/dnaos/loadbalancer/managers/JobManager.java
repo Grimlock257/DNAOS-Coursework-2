@@ -119,18 +119,6 @@ public class JobManager {
     }
 
     /**
-     * Fetch all the jobs that are currently allocated to a Node
-     *
-     * @param node The node whose jobs to find
-     *
-     * @return The LinkedHashMap of the Jobs and JobStatus belonging to the specified Node
-     */
-    // TODO: Untested
-    public LinkedHashMap<Job, JobAlloc> getNodeJobs(Node node) {
-        return null;
-    }
-
-    /**
      * Get the number of jobs that are currently allocated and in progress with a Node
      *
      * @param node The node whose active jobs to tally

@@ -92,6 +92,16 @@ public class NodeManager {
     }
 
     /**
+     * Send a data dump request to all connected nodes
+     */
+    public void issueDataDumps() {
+        for (Node node : nodes) {
+            MessageManager.getInstance().send(MessageType.DATA_DUMP_NODE.toString(), node.getAddr(), node.getPort());
+            System.out.println("[INFO] Data dump request sent to node '" + node.getName() + "'\n");
+        }
+    }
+
+    /**
      * Send shutdown message all connected nodes
      */
     public void shutdownAllNodes() {

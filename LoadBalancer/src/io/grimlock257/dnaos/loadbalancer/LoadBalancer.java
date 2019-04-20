@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
 
 /**
  * This class represents the Load Balancer and all it's functionality
@@ -35,6 +36,7 @@ public class LoadBalancer {
     private final int I_CANCEL_REQUEST_JOB_NAME = 1;
     private final int I_CANCELLED_JOB_NAME = 1;
     private final int I_SHUTDOWN_NODE_NAME = 1;
+    private final int I_DATA_DUMP_NODE_NAME = 1;
 
     // Information about the connected initiator
     private String initiatorIP;
@@ -356,6 +358,69 @@ public class LoadBalancer {
                         System.out.println("[INFO] Job '" + cancelledJob.getName() + "' cancelled\n");
                         System.out.println("[INFO] Current job list:\n" + jobManager.toString());
                     }
+                }
+
+                break;
+            case DATA_DUMP_LOAD_BALANCER:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String lbDataDump = ("\n" +
+                        "[INFO] Current client:\n" + "Address: ") + initiatorAddr + ", Port: " + initiatorPort + "\n\n" +
+                        "[INFO] Current nodes:\n" + nodeManager.toString() + "\n\n" +
+                        "[INFO] Current job list:\n" + jobManager.toString();
+
+                messageManager.send(MessageType.DATA_DUMP_LOAD_BALANCER.toString() + "," + lbDataDump, initiatorAddr, initiatorPort);
+                System.out.println("");
+
+                break;
+            case DATA_DUMP_NODES_REQUEST:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                System.out.println("[INFO] Issuing data dump request for all connected nodes...\n");
+                nodeManager.issueDataDumps();
+                System.out.println("[INFO] All data dump requests have been issued");
+
+                break;
+            case DATA_DUMP_NODE_SPECIFIC_REQUEST:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String nodeToDataDump = getValidStringArg(args, I_SHUTDOWN_NODE_NAME);
+
+                if (nodeToDataDump == null) {
+                    System.out.println("[ERROR] Node data dump was not requested, some of the supplied information was invalid");
+                } else {
+                    Node dataDumpNode = nodeManager.findByName(nodeToDataDump);
+
+                    if (dataDumpNode == null) {
+                        System.out.println("[ERROR] Node data dump was not requested as no node with name '" + nodeToDataDump + "' was found\n");
+
+                        messageManager.send(MessageType.DATA_DUMP_NODE_FAILURE.toString() + "," + nodeToDataDump, initiatorAddr, initiatorPort);
+
+                        System.out.println("\n[INFO] Initiator has been notified of failure to retrieve node data dump");
+                    } else {
+                        messageManager.send(MessageType.DATA_DUMP_NODE.toString(), dataDumpNode.getAddr(), dataDumpNode.getPort());
+                        System.out.println("\n[INFO] Data dump request sent to node '" + dataDumpNode.getName() + "'");
+                    }
+                }
+
+                break;
+            case DATA_DUMP_NODE:
+                // Use args[0] instead of the whole message as the message will be a debug dump and not display nicely
+                // in this context as it will need to be displayed separately
+
+                String dataDumpNodeName = getValidStringArg(args, I_DATA_DUMP_NODE_NAME);
+                String specificNodeDataDump = String.join(",", Arrays.copyOfRange(args, 2, args.length));
+
+                if (dataDumpNodeName == null) {
+                    System.out.println("[ERROR] Node data dump not accepted, some of the supplied information was invalid");
+                    messageManager.send(MessageType.DATA_DUMP_NODE_FAILURE.toString() + "," + dataDumpNodeName, initiatorAddr, initiatorPort);
+                } else {
+                    System.out.println("[INFO] Received an '" + args[0] + "', processing...\n");
+                    System.out.println("[INFO] Received data dump from node '" + dataDumpNodeName + "' showing job history and thread list");
+                    System.out.println("[INFO] Forwarding to Initiator...\n");
+
+                    messageManager.send(MessageType.DATA_DUMP_NODE_SUCCESS.toString() + "," + dataDumpNodeName + "," + specificNodeDataDump, initiatorAddr, initiatorPort);
+                    System.out.println("\n[INFO] Initiator has been sent retrieved data dump");
                 }
 
                 break;

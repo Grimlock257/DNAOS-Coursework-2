@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -31,6 +32,8 @@ public class Initiator {
     private final int I_CANCELLED_JOB_NAME = 1;
     private final int I_SHUTDOWN_NODE_FAILURE_NAME = 1;
     private final int I_SHUTDOWN_NODE_SUCCESS_NAME = 1;
+    private final int I_DATA_DUMP_NODE_NAME = 1;
+    private final int I_DATA_DUMP_NODE_NAME_FAILURE = 1;
 
     // How frequently to reattempt connection to the load balancer
     private final int RECONNECTION_TIME = 4 * 1000;
@@ -282,6 +285,58 @@ public class Initiator {
                 }
 
                 break;
+            case DATA_DUMP_LOAD_BALANCER:
+                // Use args[0] instead of the whole message as the message will be a data dump and not display nicely
+                // in this context as it will need to be displayed separately
+
+                if (!connected) {
+                    System.err.println("[ERROR] Received an '" + args[0] + "', despite not being connected to a load balancer");
+                    break;
+                }
+
+                System.out.println("[INFO] Received an '" + args[0] + "', processing...\n");
+                System.out.println("[INFO] Received the following data dump from the load balancer for its registered client, nodes and jobs:\n\n-- Load Balancer Data Dump --");
+                System.out.println(String.join(",", Arrays.copyOfRange(args, 1, args.length)));
+
+                break;
+            case DATA_DUMP_NODE_SUCCESS:
+                // Use args[0] instead of the whole message as the message will be a data dump and not display nicely
+                // in this context as it will need to be displayed separately
+
+                if (!connected) {
+                    System.err.println("[ERROR] Received an '" + args[0] + "', despite not being connected to a load balancer");
+                    break;
+                }
+
+                System.out.println("[INFO] Received an '" + args[0] + "', processing...\n");
+
+                String dataDumpNodeName = getValidStringArg(args, I_DATA_DUMP_NODE_NAME);
+
+                if (dataDumpNodeName == null) {
+                    System.out.println("[ERROR] Some of the supplied information was invalid");
+                } else {
+                    System.out.println("[INFO] Received the following data dump from the load balancer for node '" + dataDumpNodeName + "' job allocation history and thread list:\n\n-- Node '" + dataDumpNodeName + "' Data Dump --");
+                    System.out.println(String.join(",", Arrays.copyOfRange(args, 2, args.length)));
+                }
+
+                break;
+            case DATA_DUMP_NODE_FAILURE:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String dataDumpFailedNodeName = getValidStringArg(args, I_DATA_DUMP_NODE_NAME_FAILURE);
+
+                if (dataDumpFailedNodeName == null) {
+                    System.out.println("[ERROR] Some of the supplied information was invalid");
+                } else {
+                    System.out.println("[INFO] The requested data dump of '" + dataDumpFailedNodeName + "' could not be carried out as it was not found on the Load Balancer\n");
+                }
+
+                break;
             case UNKNOWN:
             default:
                 if (!connected) {
@@ -299,8 +354,11 @@ public class Initiator {
     private enum CommandOptions {
         NEW_JOB,
         CANCEL_JOB,
-        SHUTDOWN_ALL,
-        SHUTDOWN_SPECIFIC;
+        DATA_DUMP_LOAD_BALANCER, // Show connected client, connected nodes and stored jobs
+        DATA_DUMP_NODES, // For every connected node, show its details, completed jobs, allocated jobs and alive non-daemon threads
+        DATA_DUMP_NODE_SPECIFIC, // For the specific node, show its details, completed jobs, allocated jobs and alive non-daemon threads
+        SHUTDOWN_SPECIFIC,
+        SHUTDOWN_ALL;
 
         // Cache the values array to avoid calling it every time
         public static final CommandOptions values[] = values();
@@ -368,6 +426,34 @@ public class Initiator {
                 }
 
                 break;
+            case DATA_DUMP_LOAD_BALANCER:
+                messageManager.send(MessageType.DATA_DUMP_LOAD_BALANCER.toString(), lbAddr, lbPort);
+                System.out.println("");
+
+                break;
+            case DATA_DUMP_NODES:
+                messageManager.send(MessageType.DATA_DUMP_NODES_REQUEST.toString(), lbAddr, lbPort);
+                System.out.println("");
+
+                break;
+            case DATA_DUMP_NODE_SPECIFIC:
+                System.out.print("Enter name of node to retrieve data dump from: ");
+
+                String nodeToDataDump = getStringInput();
+
+                messageManager.send(MessageType.DATA_DUMP_NODE_SPECIFIC_REQUEST.toString() + "," + nodeToDataDump, lbAddr, lbPort);
+                System.out.println("");
+
+                break;
+            case SHUTDOWN_SPECIFIC:
+                System.out.print("Enter node name to shutdown: ");
+
+                String nodeToShutdown = getStringInput();
+
+                messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
+                System.out.println("");
+
+                break;
             case SHUTDOWN_ALL:
                 System.out.print("Are you sure you want to shutdown this initiator, the load balancer and all nodes? (Y/N): ");
 
@@ -388,15 +474,6 @@ public class Initiator {
                 } else {
                     System.out.println("[INFO] Shutdown cancelled");
                 }
-
-                break;
-            case SHUTDOWN_SPECIFIC:
-                System.out.print("Enter node name to shutdown: ");
-
-                String nodeToShutdown = getStringInput();
-
-                messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
-                System.out.println("");
 
                 break;
             default:

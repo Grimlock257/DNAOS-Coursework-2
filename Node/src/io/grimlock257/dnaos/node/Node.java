@@ -9,6 +9,8 @@ import io.grimlock257.dnaos.node.message.MessageType;
 import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -36,6 +38,7 @@ public class Node {
     private String name;
     private int capacity;
     private int port;
+    private String addr; // TODO IP?
 
     // Information about the load balancer
     private String lbHost;
@@ -80,6 +83,7 @@ public class Node {
             jobManager = JobManager.getInstance();
 
             lbAddr = InetAddress.getByName(lbHost);
+            addr = InetAddress.getLocalHost().getHostAddress();
 
             connect();
             loop();
@@ -120,7 +124,7 @@ public class Node {
             public void run() {
                 try {
                     // Send register message to the Load Balancer
-                    messageManager.send(MessageType.NODE_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + port + "," + name + "," + capacity, lbAddr, lbPort);
+                    messageManager.send(MessageType.NODE_REGISTER.toString() + "," + addr + "," + port + "," + name + "," + capacity, lbAddr, lbPort);
                 } catch (Exception e) {
                     System.err.println("[ERROR] Unhandled Exception thrown");
                     e.printStackTrace();
@@ -255,11 +259,11 @@ public class Node {
                     } else {
                         System.out.println("[INFO] Previous job information for job '" + cancelJob.getName() + "':\n" + jobManager.jobToString(cancelJobName) + "\n");
 
-                        System.out.println("[INFO] Alive threads before:");
+                        System.out.println("[INFO] Alive threads (non-daemon) before:");
 
                         // Iterate through the set of threads, printing the name of each
                         for (Thread thread : Thread.getAllStackTraces().keySet()) {
-                            if (thread.isAlive()) {
+                            if (thread.isAlive() && !thread.isDaemon()) {
                                 System.out.println("Thread name: " + thread.getName());
                             }
                         }
@@ -275,11 +279,11 @@ public class Node {
                             }
                         }
 
-                        System.out.println("\n[INFO] Alive threads after:");
+                        System.out.println("\n[INFO] Alive threads (non-daemon) after:");
 
                         // Iterate through the set of threads, printing the name of each
                         for (Thread thread : Thread.getAllStackTraces().keySet()) {
-                            if (thread.isAlive()) {
+                            if (thread.isAlive() && !thread.isDaemon()) {
                                 System.out.println("Thread name: " + thread.getName());
                             }
                         }
@@ -292,6 +296,21 @@ public class Node {
                         System.out.println("\n[INFO] Current job list:\n" + jobManager.toString());
                     }
                 }
+
+                break;
+            case DATA_DUMP_NODE:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String dataDump = createDataDump();
+
+                messageManager.send(MessageType.DATA_DUMP_NODE.toString() + "," + name + "," + dataDump, lbAddr, lbPort);
+
+                System.out.println("\n[INFO] Load Balancer has been sent the data dump");
 
                 break;
             case NODE_SHUTDOWN:
@@ -314,6 +333,53 @@ public class Node {
 
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
+    }
+
+    /**
+     * Create a data dump of the node. Shows node details, completed (sent to load balancer)
+     * jobs and currently in progress jobs
+     *
+     * @return Node data dump in String format
+     */
+    private String createDataDump() {
+        StringBuilder sbResult = new StringBuilder(); // Store node information
+        StringBuilder sbSentJobs = new StringBuilder(); // Store sent jobs from node
+        StringBuilder sbAllocatedJobs = new StringBuilder(); // Store allocated jobs to node
+        StringBuilder sbAliveThreads = new StringBuilder(); // Store alive, non-daemon threads
+
+        // Add the headings to each StringBuilder
+        sbResult.append("[INFO] Node: ").append(this.toString()).append("\n\n");
+        sbSentJobs.append("[INFO] Jobs completed by node '").append(this.name).append("':\n");
+        sbAllocatedJobs.append("[INFO] Jobs allocated to node '").append(this.name).append("':\n");
+        sbAliveThreads.append("[INFO] Alive (non-daemon) threads in node '").append(this.name).append("':\n");
+
+        // LinkedHashMap of associated jobs to the current node
+        LinkedHashMap<Job, JobStatus> nodeJobs = JobManager.getInstance().getJobs();
+
+        // Iterate through the associated jobs and add the job information to the relevant StringBuilder
+        for (Map.Entry<Job, JobStatus> nodeJobDetails : nodeJobs.entrySet()) {
+            StringBuilder sbReference = (nodeJobDetails.getValue() == JobStatus.SENT) ? sbSentJobs : sbAllocatedJobs;
+
+            sbReference.append(nodeJobDetails.getKey().toString());
+            sbReference.append(" --- ");
+            sbReference.append("Job Status: ");
+            sbReference.append(nodeJobDetails.getValue().toString());
+            sbReference.append("\n");
+        }
+
+        // Iterate through the set of threads, appending name of each non-daemon thread
+        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+            if (thread.isAlive() && !thread.isDaemon()) {
+                sbAliveThreads.append("Thread name: ").append(thread.getName()).append("\n");
+            }
+        }
+
+        // Add the two StringBuilders for each JobStatus to the main StringBuilder for Node information
+        sbResult.append(sbSentJobs.toString()).append("\n");
+        sbResult.append(sbAllocatedJobs.toString()).append("\n");
+        sbResult.append(sbAliveThreads.toString());
+
+        return sbResult.toString();
     }
 
     /**
@@ -400,5 +466,13 @@ public class Node {
         } else {
             return -1;
         }
+    }
+
+    /**
+     * @return The node formatted as a string of its properties
+     */
+    @Override
+    public String toString() {
+        return "Name: " + name + ", Capacity: " + capacity + ", Address: " + addr + ", Port: " + port + ", Usage: " + (jobManager.getAmountOfActiveJobs() / (double) capacity) * 100 + "%";
     }
 }
