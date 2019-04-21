@@ -325,6 +325,17 @@ public class Node {
                 System.exit(0);
 
                 break;
+            case IS_ALIVE:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
+                System.out.println("[INFO] Received '" + message + "', processing...");
+                System.out.println("[INFO] Sending is alive message back to Load Balancer...");
+                messageManager.send(MessageTypeOut.IS_ALIVE_CONFIRM.toString() + "," + name, lbAddr, lbPort);
+
+                break;
             case UNKNOWN:
             default:
                 if (!connected) {

@@ -12,5 +12,6 @@ public enum MessageTypeOut {
     NODE_RESIGN,
     COMPLETE_JOB,
     DATA_DUMP_NODE,
-    CANCEL_JOB_CONFIRM
+    CANCEL_JOB_CONFIRM,
+    IS_ALIVE_CONFIRM
 }

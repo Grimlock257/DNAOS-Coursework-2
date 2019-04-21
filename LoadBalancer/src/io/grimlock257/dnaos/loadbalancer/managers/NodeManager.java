@@ -4,9 +4,8 @@ import io.grimlock257.dnaos.loadbalancer.AllocationMethod;
 import io.grimlock257.dnaos.loadbalancer.message.MessageTypeOut;
 import io.grimlock257.dnaos.loadbalancer.node.Node;
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Node Manager for Load Balancer project
@@ -22,13 +21,16 @@ public class NodeManager {
     private AllocationMethod allocationMethod;
     private int nodeToUse = 0; // Stores index of next Node to use, used in non-weighted round-robin
 
-    private LinkedList<Node> nodes;
+    private LinkedHashMap<Node, Timer> nodes;
+
+    // How frequently to check whether a node is still available or not
+    private final int CHECK_ALIVE_INTERVAL = 3 * 60 * 1000;
 
     /**
      * NodeManager constructor
      */
     private NodeManager() {
-        this.nodes = new LinkedList<>();
+        this.nodes = new LinkedHashMap<>();
     }
 
     /**
@@ -45,29 +47,30 @@ public class NodeManager {
     }
 
     /**
-     * Add a node to the nodes LinkedList providing a node of the same name doesn't already exist
+     * Add a node to the nodes LinkedHashMap providing a node of the same name doesn't already exist
      * or the supplied address / port combination already exists
      *
-     * @param node The node to add to the nodes LinkedList
+     * @param node The node to add to the nodes LinkedHashMap
      *
      * @return Whether or not the addition was successful, false is matching name or address / port combination found
      */
     public boolean addNode(Node node) {
-        for (Node searchNode : nodes) {
+        for (Node searchNode : nodes.keySet()) {
             if (searchNode.getName().equals(node.getName()) || (searchNode.getAddr().equals(node.getAddr()) && searchNode.getPort() == node.getPort())) {
                 return false;
             }
         }
 
-        nodes.add(node);
+        nodes.put(node, new Timer());
+        resetIsAliveTimer(node.getName());
 
         return true;
     }
 
     /**
-     * Remove a node from the nodes LinkedList
+     * Remove a node from the nodes LinkedHashMap
      *
-     * @param node The node to remove from the nodes LinkedList
+     * @param node The node to remove from the nodes LinkedHashMap
      */
     public void removeNode(Node node) {
         nodes.remove(node);
@@ -87,19 +90,19 @@ public class NodeManager {
                 // Make sure the nodes are sorted
                 sortNodes();
 
-                // If the LinkedList is empty, return null, otherwise make sure the first element in the list has a
+                // If the LinkedHashMap is empty, return null, otherwise make sure the first element in the list has a
                 // usage of less than 100%, is so return this node otherwise return null
                 if (!nodes.isEmpty()) {
-                    freestNode = (nodes.get(0).calcUsage() < 100) ? nodes.get(0) : null;
+                    freestNode = (getNode(0).calcUsage() < 100) ? getNode(0) : null;
                 }
 
                 break;
             case NON_WEIGHTED:
-                // If the LinkedList is empty, return null, otherwise check if the nodeToUse = nodes
-                // LinkedLIst size (if match, we reached end of the LinkedList), if so, set nodeToUse
+                // If the LinkedHashMap is empty, return null, otherwise check if the nodeToUse = nodes
+                // LinkedHashMap size (if match, we reached end of the LinkedHashMap), if so, set nodeToUse
                 // to 0 and return the node at that position, otherwise just return the node at nodeToUse
                 if (!nodes.isEmpty()) {
-                    freestNode = (nodes.get(nodeToUse).calcUsage() < 100) ? nodes.get(nodeToUse) : null;
+                    freestNode = (getNode(nodeToUse).calcUsage() < 100) ? getNode(nodeToUse) : null;
 
                     incrementNodeToUse();
                 }
@@ -117,19 +120,22 @@ public class NodeManager {
         for (int i = 0; i < nodes.size(); i++) {
             nodeToUse = ++nodeToUse % nodes.size();
 
-            if ((nodes.get(nodeToUse).calcUsage() < 100)) {
+            if ((getNode(nodeToUse).calcUsage() < 100)) {
                 break;
             }
         }
     }
 
     /**
-     * Sort the nodes LinkedList by ascending workload then descending capacity (for use with the Weighted Round-Robin)
+     * Sort the nodes LinkedHashMap by ascending workload then descending capacity (for use with the Weighted Round-Robin)
      */
     private void sortNodes() {
-        nodes.sort(new Comparator<Node>() {
+        nodes = nodes.entrySet().stream().sorted(new Comparator<Map.Entry<Node, Timer>>() {
             @Override
-            public int compare(Node node1, Node node2) {
+            public int compare(Map.Entry<Node, Timer> entry1, Map.Entry<Node, Timer> entry2) {
+                Node node1 = entry1.getKey();
+                Node node2 = entry2.getKey();
+
                 double usageDifference = node1.calcUsage() - node2.calcUsage();
 
                 if (usageDifference < 0) {
@@ -140,14 +146,59 @@ public class NodeManager {
 
                 return node2.getCapacity() - node1.getCapacity();
             }
-        });
+        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> {
+                    throw new AssertionError();
+                }, LinkedHashMap::new
+        ));
+    }
+
+    /**
+     * Reset the isAlive timer for the specified Node. The timer sends a IS_ALIVE message to the associated Node
+     * at a specified time interval to see if the node is still reachable
+     *
+     * @param nodeName The name of the node to reset the timer for
+     */
+    public void resetIsAliveTimer(String nodeName) {
+        // Iterate through the LinkedHashMap to find the Node matching the supplied nodeName
+        for (Map.Entry<Node, Timer> nodeDetails : nodes.entrySet()) {
+            // Store key/value as variable for ease
+            Node theNode = nodeDetails.getKey();
+            Timer theTimer = nodeDetails.getValue();
+
+            // The current iteration node name matches the supplied nodeName
+            if (theNode.getName().equals(nodeName)) {
+                // Cancel the existing time and remove
+                theTimer.cancel();
+                theTimer.purge();
+
+                // Create a new Timer object in its place
+                theTimer = new Timer();
+
+                // Store the new Timer object in the LinkedHashMap, overwriting the old
+                nodeDetails.setValue(theTimer);
+
+                // Create a timer to send a IS_ALIVE message every specified time interval
+                theTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        try {
+                            // Send a IS_ALIVE message to the node
+                            MessageManager.getInstance().send(MessageTypeOut.IS_ALIVE.toString(), theNode.getAddr(), theNode.getPort());
+                        } catch (Exception e) {
+                            System.err.println("[ERROR] Unhandled Exception thrown");
+                            e.printStackTrace();
+                        }
+                    }
+                }, CHECK_ALIVE_INTERVAL);
+            }
+        }
     }
 
     /**
      * Send a data dump request to all connected nodes
      */
     public void issueDataDumps() {
-        for (Node node : nodes) {
+        for (Node node : nodes.keySet()) {
             MessageManager.getInstance().send(MessageTypeOut.DATA_DUMP_NODE.toString(), node.getAddr(), node.getPort());
             System.out.println("[INFO] Data dump request sent to node '" + node.getName() + "'\n");
         }
@@ -158,7 +209,7 @@ public class NodeManager {
      */
     public void shutdownAllNodes() {
         // Create an iterator to iterate over the nodes ArrayList
-        Iterator<Node> itr = nodes.iterator();
+        Iterator<Node> itr = nodes.keySet().iterator();
 
         // While there is another item, get that item and remove it
         while (itr.hasNext()) {
@@ -197,20 +248,31 @@ public class NodeManager {
     }
 
     /**
-     * Find the specified node object in the nodes LinkedList using the supplied name
+     * Find the specified node object in the nodes LinkedHashMap using the supplied name
      *
-     * @param nodeName The name of the node to locate in the nodes LinkedList
+     * @param nodeName The name of the node to locate in the nodes LinkedHashMap
      *
      * @return The node object matching the name, or null if not found
      */
     public Node findByName(String nodeName) {
-        for (Node node : nodes) {
+        for (Node node : nodes.keySet()) {
             if (node.getName().equals(nodeName)) {
                 return node;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Find the Node object at the specified index
+     *
+     * @param index The index at which to retrieve a node
+     *
+     * @return The specified Node, or null if not found
+     */
+    private Node getNode(int index) {
+        return (Node) nodes.keySet().toArray()[index];
     }
 
     /**
@@ -223,7 +285,7 @@ public class NodeManager {
     }
 
     /**
-     * Used to display the nodes LinkedList in a nice, readable format
+     * Used to display the nodes LinkedHashMap in a nice, readable format
      *
      * @return The formatted string
      */
@@ -231,9 +293,9 @@ public class NodeManager {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        // Iterate through the nodes LinkedList, appending each node to the output
+        // Iterate through the nodes LinkedHashMap, appending each node to the output
         int i = 0;
-        for (Node node : nodes) {
+        for (Node node : nodes.keySet()) {
             i++;
 
             sb.append(node.toString());

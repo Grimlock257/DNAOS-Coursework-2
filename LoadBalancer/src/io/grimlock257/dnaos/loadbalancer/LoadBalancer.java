@@ -38,6 +38,7 @@ public class LoadBalancer {
     private final int I_CANCELLED_JOB_NAME = 1;
     private final int I_SHUTDOWN_NODE_NAME = 1;
     private final int I_DATA_DUMP_NODE_NAME = 1;
+    private final int I_IS_ALIVE_NODE_NAME = 1;
 
     // Information about the connected initiator
     private String initiatorIP;
@@ -305,6 +306,9 @@ public class LoadBalancer {
                         System.out.println("[INFO] Job '" + completedJob.getName() + "' is complete and sent to the initiator\n");
                         System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
                         System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
+
+                        nodeManager.resetIsAliveTimer(completedJobNode.getName());
+                        System.out.println("\n[INFO] Is alive timer reset for node '" + completedJobNode.getName() + "'");
                     }
                 }
 
@@ -363,6 +367,10 @@ public class LoadBalancer {
 
                         System.out.println("[INFO] Job '" + cancelledJob.getName() + "' cancelled\n");
                         System.out.println("[INFO] Current job list:\n" + jobManager.toString());
+
+                        String cancelledJobNodeName = jobManager.getNodeByJob(cancelledJobName).getName();
+                        nodeManager.resetIsAliveTimer(cancelledJobNodeName);
+                        System.out.println("\n[INFO] Is alive timer reset for node '" + cancelledJobNodeName + "'");
                     }
                 }
 
@@ -427,6 +435,29 @@ public class LoadBalancer {
 
                     messageManager.send(MessageTypeOut.DATA_DUMP_NODE_SUCCESS.toString() + "," + dataDumpNodeName + "," + specificNodeDataDump, initiatorAddr, initiatorPort);
                     System.out.println("\n[INFO] Initiator has been sent retrieved data dump");
+
+                    nodeManager.resetIsAliveTimer(dataDumpNodeName);
+                    System.out.println("\n[INFO] Is alive timer reset for node '" + dataDumpNodeName + "'");
+                }
+
+                break;
+            case IS_ALIVE_CONFIRM:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String isAliveNodeName = getValidStringArg(args, I_IS_ALIVE_NODE_NAME);
+
+                if (isAliveNodeName == null) {
+                    System.out.println("[ERROR] Some of the supplied information was invalid");
+                } else {
+                    Node isAliveNode = nodeManager.findByName(isAliveNodeName);
+
+                    if (isAliveNode == null) {
+                        System.out.println("[ERROR] Node alive timer could not be reset as no node with name '" + isAliveNodeName + "' was found\n");
+                    } else {
+                        System.out.println("[INFO] Received alive message from node '" + isAliveNodeName + "'");
+                        nodeManager.resetIsAliveTimer(isAliveNodeName);
+                        System.out.println("[INFO] Is alive timer reset for node '" + isAliveNodeName + "'");
+                    }
                 }
 
                 break;

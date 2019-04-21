@@ -14,5 +14,6 @@ public enum MessageTypeIn {
     REGISTER_FAILURE,
     DATA_DUMP_NODE,
     CANCEL_JOB_REQUEST,
+    IS_ALIVE,
     UNKNOWN
 }
