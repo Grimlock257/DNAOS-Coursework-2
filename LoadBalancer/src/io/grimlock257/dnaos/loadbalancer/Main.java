@@ -22,7 +22,14 @@ public class Main {
         if (args.length == 2) {
             // Get parameters from the supplied command line arguments
             int port = Integer.parseInt(args[0]);
-            AllocationMethod allocationMethod = AllocationMethod.valueOf(args[1]);
+
+            AllocationMethod allocationMethod = null;
+            try {
+                allocationMethod = AllocationMethod.valueOf(args[1].trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                System.err.println("[ERROR] Invalid allocation method entered. Enter either WEIGHTED or NON_WEIGHTED, exiting...");
+                System.exit(1);
+            }
 
             InetAddress addr = null;
             try {
