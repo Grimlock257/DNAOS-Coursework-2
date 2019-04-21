@@ -56,13 +56,17 @@ public class LoadBalancer {
     private NodeManager nodeManager;
     private JobManager jobManager;
 
+    private AllocationMethod allocationMethod;
+
     /**
      * Create a new load balancer instance
      *
-     * @param port The port for the Load Balancer to operate on
+     * @param port             The port for the Load Balancer to operate on
+     * @param allocationMethod The allocation method to use by the Load Balancer when allocating Jobs to Nodes
      */
-    public LoadBalancer(int port) {
+    public LoadBalancer(int port, AllocationMethod allocationMethod) {
         this.port = port;
+        this.allocationMethod = allocationMethod;
     }
 
     /**
@@ -76,6 +80,7 @@ public class LoadBalancer {
             messageManager = MessageManager.getInstance();
             messageManager.init(socket);
             nodeManager = NodeManager.getInstance();
+            nodeManager.setAllocationMethod(allocationMethod);
             jobManager = JobManager.getInstance();
 
             // Have setup first?
@@ -120,14 +125,14 @@ public class LoadBalancer {
             }
 
             // Allocate a job (if available)
-            Node freestNode = nodeManager.getFreestNode();
+            Job nextJob = jobManager.getNextJob();
 
-            if (freestNode != null) {
-                Job nextJob = jobManager.getNextJob();
+            if (nextJob != null) {
+                Node freestNode = nodeManager.getFreestNode();
 
-                if (nextJob != null) {
+                if (freestNode != null) {
                     System.out.println("===============================================================================");
-                    System.out.println("[INFO] Allocating job '" + nextJob.getName() + "' (now marked as " + JobStatus.BEING_ALLOCATED.toString() + ")...\n");
+                    System.out.println("[INFO] Allocating job '" + nextJob.getName() + "'...\n");
                     System.out.println("[INFO] Current nodes:\n" + nodeManager.toString() + "\n");
                     System.out.println("[INFO] Previous job list:\n" + jobManager.toString() + "\n");
 

@@ -9,7 +9,6 @@ package io.grimlock257.dnaos.loadbalancer.job;
  */
 public enum JobStatus {
     UNALLOCATED,
-    BEING_ALLOCATED,
     ALLOCATED,
     REQUESTED_CANCEL,
     CANCELLED,

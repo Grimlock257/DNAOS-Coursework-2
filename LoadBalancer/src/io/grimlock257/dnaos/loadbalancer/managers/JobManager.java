@@ -59,15 +59,13 @@ public class JobManager {
     public void allocateJob(Job job, Node node) {
         // Iterate through the jobs LinkedHashMap to find the supplied job
         for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
-            if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.BEING_ALLOCATED) {
+            if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.UNALLOCATED) {
                 jobDetails.getValue().setJobStatus(JobStatus.ALLOCATED);
                 jobDetails.getValue().setNode(node);
 
                 System.out.println("[INFO] Job '" + job.getName() + "' been allocated to '" + node.getName() + "'\n");
             } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.ALLOCATED) {
                 System.out.println("[ERROR] Job '" + job.getName() + "' has already been allocated\n");
-            } else if (jobDetails.getKey() == job && jobDetails.getValue().getJobStatus() == JobStatus.UNALLOCATED) {
-                System.out.println("[ERROR] Job '" + job.getName() + "' is not ready to be allocated yet\n");
             }
         }
     }
@@ -105,12 +103,9 @@ public class JobManager {
      * @return The next unallocated job as a Job object
      */
     public Job getNextJob() {
-        // Iterate through the jobs LinkedHashMap to find the next job with status 'UNALLOCATED', once found
-        // set the status to 'BEING_ALLOCATED' (to prevent two threads from trying to allocate the job).
+        // Iterate through the jobs LinkedHashMap to find the next job with status 'UNALLOCATED'
         for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
             if (jobDetails.getValue().getJobStatus() == JobStatus.UNALLOCATED) {
-                jobDetails.getValue().setJobStatus(JobStatus.BEING_ALLOCATED);
-
                 return jobDetails.getKey();
             }
         }

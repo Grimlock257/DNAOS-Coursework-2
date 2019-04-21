@@ -1,8 +1,10 @@
 package io.grimlock257.dnaos.loadbalancer.managers;
 
+import io.grimlock257.dnaos.loadbalancer.AllocationMethod;
 import io.grimlock257.dnaos.loadbalancer.message.MessageType;
 import io.grimlock257.dnaos.loadbalancer.node.Node;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -16,6 +18,9 @@ import java.util.LinkedList;
  */
 public class NodeManager {
     private static NodeManager instance = null;
+
+    private AllocationMethod allocationMethod;
+    private int nodeToUse = 0; // Stores index of next Node to use, used in non-weighted round-robin
 
     private LinkedList<Node> nodes;
 
@@ -69,26 +74,73 @@ public class NodeManager {
     }
 
     /**
-     * Work out which Node is the most free by calculating the current usage of each Node
+     * Retrieve the freest node, chosen based on the current allocation method
      *
      * @return The freest Node
      */
     public Node getFreestNode() {
         Node freestNode = null;
 
-        // Iterate over the nodes LinkedList, checking the usage of the current found freest
-        // Node and comparing it with the current iteration node
-        for (Node node : nodes) {
-            if (freestNode == null && node.calcUsage() < 100) {
-                freestNode = node;
-            } else if (freestNode != null && node.calcUsage() < freestNode.calcUsage()) {
-                freestNode = node;
-            } else if (freestNode != null && node.calcUsage() == freestNode.calcUsage() && node.getCapacity() > freestNode.getCapacity()) {
-                freestNode = node;
-            }
+        // Select the freest node based on the allocation method
+        switch (allocationMethod) {
+            case WEIGHTED:
+                // Make sure the nodes are sorted
+                sortNodes();
+
+                // If the LinkedList is empty, return null, otherwise make sure the first element in the list has a
+                // usage of less than 100%, is so return this node otherwise return null
+                if (!nodes.isEmpty()) {
+                    freestNode = (nodes.get(0).calcUsage() < 100) ? nodes.get(0) : null;
+                }
+
+                break;
+            case NON_WEIGHTED:
+                // If the LinkedList is empty, return null, otherwise check if the nodeToUse = nodes
+                // LinkedLIst size (if match, we reached end of the LinkedList), if so, set nodeToUse
+                // to 0 and return the node at that position, otherwise just return the node at nodeToUse
+                if (!nodes.isEmpty()) {
+                    freestNode = (nodes.get(nodeToUse).calcUsage() < 100) ? nodes.get(nodeToUse) : null;
+
+                    incrementNodeToUse();
+                }
+
+                break;
         }
 
         return freestNode;
+    }
+
+    /**
+     * Attempt to increment the nodeToUse variable to know which node to use next
+     */
+    private void incrementNodeToUse() {
+        for (int i = 0; i < nodes.size(); i++) {
+            nodeToUse = ++nodeToUse % nodes.size();
+
+            if ((nodes.get(nodeToUse).calcUsage() < 100)) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Sort the nodes LinkedList by ascending workload then descending capacity (for use with the Weighted Round-Robin)
+     */
+    private void sortNodes() {
+        nodes.sort(new Comparator<Node>() {
+            @Override
+            public int compare(Node node1, Node node2) {
+                double usageDifference = node1.calcUsage() - node2.calcUsage();
+
+                if (usageDifference < 0) {
+                    return -1;
+                } else if (usageDifference > 0) {
+                    return 1;
+                }
+
+                return node2.getCapacity() - node1.getCapacity();
+            }
+        });
     }
 
     /**
@@ -159,6 +211,15 @@ public class NodeManager {
         }
 
         return null;
+    }
+
+    /**
+     * Set the allocation method to use to the supplied value
+     *
+     * @param allocationMethod The new allocation method to use
+     */
+    public void setAllocationMethod(AllocationMethod allocationMethod) {
+        this.allocationMethod = allocationMethod;
     }
 
     /**
