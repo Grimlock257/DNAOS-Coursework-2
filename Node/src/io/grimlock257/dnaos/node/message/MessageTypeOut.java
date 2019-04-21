@@ -1,23 +1,16 @@
 package io.grimlock257.dnaos.node.message;
 
 /**
- * Enum of valid types of message from the Node point of view
+ * Enum of valid outgoing types of message from the Node point of view
  *
  * Adam Watson
  * Year 2 - Computer Systems Engineering
  * Distributed Network Architecture & Operating Systems Module CW-2
  */
-public enum MessageType {
+public enum MessageTypeOut {
     NODE_REGISTER,
     NODE_RESIGN,
-    NEW_JOB,
     COMPLETE_JOB,
-    LB_SHUTDOWN,
-    NODE_SHUTDOWN,
     DATA_DUMP_NODE,
-    REGISTER_CONFIRM,
-    REGISTER_FAILURE,
-    CANCEL_JOB_REQUEST,
-    CANCEL_JOB_CONFIRM,
-    UNKNOWN
+    CANCEL_JOB_CONFIRM
 }

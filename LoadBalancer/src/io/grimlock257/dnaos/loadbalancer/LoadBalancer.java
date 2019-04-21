@@ -5,7 +5,8 @@ import io.grimlock257.dnaos.loadbalancer.job.JobStatus;
 import io.grimlock257.dnaos.loadbalancer.managers.JobManager;
 import io.grimlock257.dnaos.loadbalancer.managers.MessageManager;
 import io.grimlock257.dnaos.loadbalancer.managers.NodeManager;
-import io.grimlock257.dnaos.loadbalancer.message.MessageType;
+import io.grimlock257.dnaos.loadbalancer.message.MessageTypeIn;
+import io.grimlock257.dnaos.loadbalancer.message.MessageTypeOut;
 import io.grimlock257.dnaos.loadbalancer.node.Node;
 
 import java.io.IOException;
@@ -139,7 +140,7 @@ public class LoadBalancer {
                     jobManager.allocateJob(nextJob, freestNode);
                     System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
 
-                    messageManager.send(MessageType.NEW_JOB.toString() + "," + nextJob.getName() + "," + nextJob.getDuration(), freestNode.getAddr(), freestNode.getPort());
+                    messageManager.send(MessageTypeOut.NEW_JOB.toString() + "," + nextJob.getName() + "," + nextJob.getDuration(), freestNode.getAddr(), freestNode.getPort());
                     System.out.println("");
 
                     System.out.println("[INFO] Node '" + freestNode.getName() + "' utilization is now " + freestNode.calcUsage() + "% (max capacity is " + freestNode.getCapacity() + ")");
@@ -186,7 +187,7 @@ public class LoadBalancer {
                     if (shutdownNode == null) {
                         System.out.println("[ERROR] Node was not shutdown as no node with name '" + shutdownNodeName + "' was found\n");
 
-                        messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC_FAILURE.toString() + "," + shutdownNodeName, initiatorAddr, initiatorPort);
+                        messageManager.send(MessageTypeOut.NODE_SHUTDOWN_SPECIFIC_FAILURE.toString() + "," + shutdownNodeName, initiatorAddr, initiatorPort);
 
                         System.out.println("\n[INFO] Initiator has been notified of failure to shutdown the node");
                     } else {
@@ -194,7 +195,7 @@ public class LoadBalancer {
 
                         System.out.println("\n[INFO] The following node has been removed:\n" + shutdownNode.toString() + "\n");
 
-                        messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC_SUCCESS.toString() + "," + shutdownNodeName, initiatorAddr, initiatorPort);
+                        messageManager.send(MessageTypeOut.NODE_SHUTDOWN_SPECIFIC_SUCCESS.toString() + "," + shutdownNodeName, initiatorAddr, initiatorPort);
 
                         System.out.println("\n[INFO] Initiator has been notified of successful node shutdown");
                         System.out.println("\n[INFO] Current nodes:\n" + nodeManager.toString());
@@ -215,7 +216,7 @@ public class LoadBalancer {
                     if (initiatorConnected) {
                         System.out.println("[ERROR] Initiator was not added, already connected to a initiator\n");
 
-                        messageManager.send(MessageType.REGISTER_FAILURE.toString(), newInitiatorAddr, newInitiatorPort);
+                        messageManager.send(MessageTypeOut.REGISTER_FAILURE.toString(), newInitiatorAddr, newInitiatorPort);
                     } else {
                         initiatorIP = newInitiatorIP;
                         initiatorPort = newInitiatorPort;
@@ -223,7 +224,7 @@ public class LoadBalancer {
 
                         System.out.println("[INFO] New initiator added: IP: " + initiatorIP + ", Port: " + initiatorPort + "\n");
 
-                        messageManager.send(MessageType.REGISTER_CONFIRM.toString(), initiatorAddr, initiatorPort);
+                        messageManager.send(MessageTypeOut.REGISTER_CONFIRM.toString(), initiatorAddr, initiatorPort);
 
                         initiatorConnected = true;
                     }
@@ -249,11 +250,11 @@ public class LoadBalancer {
                     if (!hasNodeAdded) {
                         System.out.println("[ERROR] Node was not added, some of the supplied information matched an existing node\n");
 
-                        messageManager.send(MessageType.REGISTER_FAILURE.toString(), nodeAddr, nodePort);
+                        messageManager.send(MessageTypeOut.REGISTER_FAILURE.toString(), nodeAddr, nodePort);
                     } else {
                         System.out.println("[INFO] New node added: " + newNode.toString() + "\n");
 
-                        messageManager.send(MessageType.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
+                        messageManager.send(MessageTypeOut.REGISTER_CONFIRM.toString(), nodeAddr, nodePort);
                         System.out.println("");
 
                         System.out.println("[INFO] Current nodes:\n" + nodeManager.toString());
@@ -296,7 +297,7 @@ public class LoadBalancer {
                         System.out.println("[INFO] Previous job information for job '" + completedJob.getName() + "':\n" + jobManager.jobToString(completedJobName) + "\n");
                         System.out.println("[INFO] Previous node information for node '" + completedJobNode.getName() + "':\n" + completedJobNode.toString() + "\n");
 
-                        messageManager.send(MessageType.COMPLETE_JOB.toString() + "," + completedJobName, initiatorAddr, initiatorPort);
+                        messageManager.send(MessageTypeOut.COMPLETE_JOB.toString() + "," + completedJobName, initiatorAddr, initiatorPort);
                         System.out.println("");
 
                         jobManager.updateJobStatus(completedJob, JobStatus.SENT);
@@ -328,7 +329,7 @@ public class LoadBalancer {
                         } else {
                             System.out.println("[INFO] Previous job information for job '" + cancelJob.getName() + "':\n" + jobManager.jobToString(cancelJobName) + "\n");
 
-                            messageManager.send(MessageType.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, jobNode.getAddr(), jobNode.getPort());
+                            messageManager.send(MessageTypeOut.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, jobNode.getAddr(), jobNode.getPort());
                             System.out.println("");
 
                             jobManager.updateJobStatus(cancelJob, JobStatus.REQUESTED_CANCEL);
@@ -355,7 +356,7 @@ public class LoadBalancer {
                     } else {
                         System.out.println("[INFO] Previous job information for job '" + cancelledJob.getName() + "':\n" + jobManager.jobToString(cancelledJobName) + "\n");
 
-                        messageManager.send(MessageType.CANCEL_JOB_CONFIRM.toString() + "," + cancelledJobName, initiatorAddr, initiatorPort);
+                        messageManager.send(MessageTypeOut.CANCEL_JOB_CONFIRM.toString() + "," + cancelledJobName, initiatorAddr, initiatorPort);
                         System.out.println("");
 
                         jobManager.updateJobStatus(cancelledJob, JobStatus.CANCELLED);
@@ -374,7 +375,7 @@ public class LoadBalancer {
                         "[INFO] Current nodes:\n" + nodeManager.toString() + "\n\n" +
                         "[INFO] Current job list:\n" + jobManager.toString();
 
-                messageManager.send(MessageType.DATA_DUMP_LOAD_BALANCER.toString() + "," + lbDataDump, initiatorAddr, initiatorPort);
+                messageManager.send(MessageTypeOut.DATA_DUMP_LOAD_BALANCER.toString() + "," + lbDataDump, initiatorAddr, initiatorPort);
                 System.out.println("");
 
                 break;
@@ -399,11 +400,11 @@ public class LoadBalancer {
                     if (dataDumpNode == null) {
                         System.out.println("[ERROR] Node data dump was not requested as no node with name '" + nodeToDataDump + "' was found\n");
 
-                        messageManager.send(MessageType.DATA_DUMP_NODE_FAILURE.toString() + "," + nodeToDataDump, initiatorAddr, initiatorPort);
+                        messageManager.send(MessageTypeOut.DATA_DUMP_NODE_FAILURE.toString() + "," + nodeToDataDump, initiatorAddr, initiatorPort);
 
                         System.out.println("\n[INFO] Initiator has been notified of failure to retrieve node data dump");
                     } else {
-                        messageManager.send(MessageType.DATA_DUMP_NODE.toString(), dataDumpNode.getAddr(), dataDumpNode.getPort());
+                        messageManager.send(MessageTypeOut.DATA_DUMP_NODE.toString(), dataDumpNode.getAddr(), dataDumpNode.getPort());
                         System.out.println("\n[INFO] Data dump request sent to node '" + dataDumpNode.getName() + "'");
                     }
                 }
@@ -418,13 +419,13 @@ public class LoadBalancer {
 
                 if (dataDumpNodeName == null) {
                     System.out.println("[ERROR] Node data dump not accepted, some of the supplied information was invalid");
-                    messageManager.send(MessageType.DATA_DUMP_NODE_FAILURE.toString() + "," + dataDumpNodeName, initiatorAddr, initiatorPort);
+                    messageManager.send(MessageTypeOut.DATA_DUMP_NODE_FAILURE.toString() + "," + dataDumpNodeName, initiatorAddr, initiatorPort);
                 } else {
                     System.out.println("[INFO] Received an '" + args[0] + "', processing...\n");
                     System.out.println("[INFO] Received data dump from node '" + dataDumpNodeName + "' showing job history and thread list");
                     System.out.println("[INFO] Forwarding to Initiator...\n");
 
-                    messageManager.send(MessageType.DATA_DUMP_NODE_SUCCESS.toString() + "," + dataDumpNodeName + "," + specificNodeDataDump, initiatorAddr, initiatorPort);
+                    messageManager.send(MessageTypeOut.DATA_DUMP_NODE_SUCCESS.toString() + "," + dataDumpNodeName + "," + specificNodeDataDump, initiatorAddr, initiatorPort);
                     System.out.println("\n[INFO] Initiator has been sent retrieved data dump");
                 }
 
@@ -436,21 +437,21 @@ public class LoadBalancer {
     }
 
     /**
-     * Validate the MessageType of the message
+     * Validate the MessageTypeIn of the message
      *
      * @param args The message broken up into elements based on commas
      *
-     * @return The MessageType (UNKNOWN is non valid)
+     * @return The MessageTypeIn (UNKNOWN is non valid)
      */
-    private MessageType getValidMessageType(String[] args) {
+    private MessageTypeIn getValidMessageType(String[] args) {
         if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
-                return MessageType.valueOf(args[I_MESSAGE_TYPE].trim());
+                return MessageTypeIn.valueOf(args[I_MESSAGE_TYPE].trim());
             } catch (IllegalArgumentException e) {
-                return MessageType.UNKNOWN;
+                return MessageTypeIn.UNKNOWN;
             }
         } else {
-            return MessageType.UNKNOWN;
+            return MessageTypeIn.UNKNOWN;
         }
     }
 

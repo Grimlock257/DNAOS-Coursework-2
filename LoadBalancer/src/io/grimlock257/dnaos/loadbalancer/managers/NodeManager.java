@@ -1,7 +1,7 @@
 package io.grimlock257.dnaos.loadbalancer.managers;
 
 import io.grimlock257.dnaos.loadbalancer.AllocationMethod;
-import io.grimlock257.dnaos.loadbalancer.message.MessageType;
+import io.grimlock257.dnaos.loadbalancer.message.MessageTypeOut;
 import io.grimlock257.dnaos.loadbalancer.node.Node;
 
 import java.util.Comparator;
@@ -148,7 +148,7 @@ public class NodeManager {
      */
     public void issueDataDumps() {
         for (Node node : nodes) {
-            MessageManager.getInstance().send(MessageType.DATA_DUMP_NODE.toString(), node.getAddr(), node.getPort());
+            MessageManager.getInstance().send(MessageTypeOut.DATA_DUMP_NODE.toString(), node.getAddr(), node.getPort());
             System.out.println("[INFO] Data dump request sent to node '" + node.getName() + "'\n");
         }
     }
@@ -165,7 +165,7 @@ public class NodeManager {
             Node node = itr.next();
 
             // Send message to node saying shutdown
-            MessageManager.getInstance().send(MessageType.NODE_SHUTDOWN.toString(), node.getAddr(), node.getPort());
+            MessageManager.getInstance().send(MessageTypeOut.NODE_SHUTDOWN.toString(), node.getAddr(), node.getPort());
 
             // Remove the node from the list
             itr.remove();
@@ -187,7 +187,7 @@ public class NodeManager {
      * @param node The node to shutdown
      */
     public void shutdownNode(Node node) {
-        MessageManager.getInstance().send(MessageType.NODE_SHUTDOWN.toString(), node.getAddr(), node.getPort());
+        MessageManager.getInstance().send(MessageTypeOut.NODE_SHUTDOWN.toString(), node.getAddr(), node.getPort());
         System.out.println("");
 
         removeNode(node);

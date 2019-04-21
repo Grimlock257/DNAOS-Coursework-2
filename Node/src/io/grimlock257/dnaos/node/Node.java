@@ -4,7 +4,8 @@ import io.grimlock257.dnaos.node.job.Job;
 import io.grimlock257.dnaos.node.job.JobStatus;
 import io.grimlock257.dnaos.node.managers.JobManager;
 import io.grimlock257.dnaos.node.managers.MessageManager;
-import io.grimlock257.dnaos.node.message.MessageType;
+import io.grimlock257.dnaos.node.message.MessageTypeIn;
+import io.grimlock257.dnaos.node.message.MessageTypeOut;
 
 import java.net.BindException;
 import java.net.DatagramSocket;
@@ -124,7 +125,7 @@ public class Node {
             public void run() {
                 try {
                     // Send register message to the Load Balancer
-                    messageManager.send(MessageType.NODE_REGISTER.toString() + "," + addr + "," + port + "," + name + "," + capacity, lbAddr, lbPort);
+                    messageManager.send(MessageTypeOut.NODE_REGISTER.toString() + "," + addr + "," + port + "," + name + "," + capacity, lbAddr, lbPort);
                 } catch (Exception e) {
                     System.err.println("[ERROR] Unhandled Exception thrown");
                     e.printStackTrace();
@@ -169,7 +170,7 @@ public class Node {
                         // Process the job
                         if (processJob(nextJob)) {
                             // Send the complete job back to the Load Balancer
-                            MessageManager.getInstance().send(MessageType.COMPLETE_JOB + "," + nextJob.getName(), lbAddr, lbPort);
+                            MessageManager.getInstance().send(MessageTypeOut.COMPLETE_JOB + "," + nextJob.getName(), lbAddr, lbPort);
                             JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
                             System.out.println("");
 
@@ -289,7 +290,7 @@ public class Node {
                         }
 
                         System.out.println("");
-                        messageManager.send(MessageType.CANCEL_JOB_CONFIRM.toString() + "," + cancelJobName, lbAddr, lbPort);
+                        messageManager.send(MessageTypeOut.CANCEL_JOB_CONFIRM.toString() + "," + cancelJobName, lbAddr, lbPort);
 
                         jobManager.updateJobStatus(cancelJob, JobStatus.CANCELLED);
 
@@ -308,7 +309,7 @@ public class Node {
 
                 String dataDump = createDataDump();
 
-                messageManager.send(MessageType.DATA_DUMP_NODE.toString() + "," + name + "," + dataDump, lbAddr, lbPort);
+                messageManager.send(MessageTypeOut.DATA_DUMP_NODE.toString() + "," + name + "," + dataDump, lbAddr, lbPort);
 
                 System.out.println("\n[INFO] Load Balancer has been sent the data dump");
 
@@ -414,21 +415,21 @@ public class Node {
     }
 
     /**
-     * Validate the MessageType of the message
+     * Validate the MessageTypeIn of the message
      *
      * @param args The message broken up into elements based on commas
      *
-     * @return The MessageType (UNKNOWN is non valid)
+     * @return The MessageTypeIn (UNKNOWN is non valid)
      */
-    private MessageType getValidMessageType(String[] args) {
+    private MessageTypeIn getValidMessageType(String[] args) {
         if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
-                return MessageType.valueOf(args[I_MESSAGE_TYPE].trim());
+                return MessageTypeIn.valueOf(args[I_MESSAGE_TYPE].trim());
             } catch (IllegalArgumentException e) {
-                return MessageType.UNKNOWN;
+                return MessageTypeIn.UNKNOWN;
             }
         } else {
-            return MessageType.UNKNOWN;
+            return MessageTypeIn.UNKNOWN;
         }
     }
 

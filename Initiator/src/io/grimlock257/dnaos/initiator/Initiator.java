@@ -4,7 +4,8 @@ import io.grimlock257.dnaos.initiator.job.Job;
 import io.grimlock257.dnaos.initiator.job.JobStatus;
 import io.grimlock257.dnaos.initiator.managers.JobManager;
 import io.grimlock257.dnaos.initiator.managers.MessageManager;
-import io.grimlock257.dnaos.initiator.message.MessageType;
+import io.grimlock257.dnaos.initiator.message.MessageTypeIn;
+import io.grimlock257.dnaos.initiator.message.MessageTypeOut;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -127,7 +128,7 @@ public class Initiator {
             public void run() {
                 try {
                     // Send register message to the Load Balancer
-                    messageManager.send(MessageType.INITIATOR_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + port, lbAddr, lbPort);
+                    messageManager.send(MessageTypeOut.INITIATOR_REGISTER.toString() + "," + InetAddress.getLocalHost().getHostAddress() + "," + port, lbAddr, lbPort);
                 } catch (Exception e) {
                     System.err.println("[ERROR] Unhandled Exception thrown");
                     e.printStackTrace();
@@ -396,7 +397,7 @@ public class Initiator {
                 if (!hasJobAdded) {
                     System.out.println("[ERROR] Job was not added, the supplied information matched an existing job\n");
                 } else {
-                    messageManager.send(MessageType.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
+                    messageManager.send(MessageTypeOut.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
 
                     System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
                     System.out.println("[INFO] Current job list:\n" + jobManager.toString());
@@ -419,7 +420,7 @@ public class Initiator {
                     } else {
                         jobManager.updateJobStatus(cancelJob, JobStatus.REQUESTED_CANCEL);
 
-                        messageManager.send(MessageType.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, lbAddr, lbPort);
+                        messageManager.send(MessageTypeOut.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, lbAddr, lbPort);
 
                         System.out.println("\n[INFO] Job cancel request has been issued");
                     }
@@ -427,12 +428,12 @@ public class Initiator {
 
                 break;
             case DATA_DUMP_LOAD_BALANCER:
-                messageManager.send(MessageType.DATA_DUMP_LOAD_BALANCER.toString(), lbAddr, lbPort);
+                messageManager.send(MessageTypeOut.DATA_DUMP_LOAD_BALANCER.toString(), lbAddr, lbPort);
                 System.out.println("");
 
                 break;
             case DATA_DUMP_NODES:
-                messageManager.send(MessageType.DATA_DUMP_NODES_REQUEST.toString(), lbAddr, lbPort);
+                messageManager.send(MessageTypeOut.DATA_DUMP_NODES_REQUEST.toString(), lbAddr, lbPort);
                 System.out.println("");
 
                 break;
@@ -441,7 +442,7 @@ public class Initiator {
 
                 String nodeToDataDump = getStringInput();
 
-                messageManager.send(MessageType.DATA_DUMP_NODE_SPECIFIC_REQUEST.toString() + "," + nodeToDataDump, lbAddr, lbPort);
+                messageManager.send(MessageTypeOut.DATA_DUMP_NODE_SPECIFIC_REQUEST.toString() + "," + nodeToDataDump, lbAddr, lbPort);
                 System.out.println("");
 
                 break;
@@ -450,7 +451,7 @@ public class Initiator {
 
                 String nodeToShutdown = getStringInput();
 
-                messageManager.send(MessageType.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
+                messageManager.send(MessageTypeOut.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
                 System.out.println("");
 
                 break;
@@ -467,7 +468,7 @@ public class Initiator {
                 }
 
                 if (selection.equals("y")) {
-                    messageManager.send(MessageType.LB_SHUTDOWN.toString(), lbAddr, lbPort);
+                    messageManager.send(MessageTypeOut.LB_SHUTDOWN.toString(), lbAddr, lbPort);
 
                     System.out.println("[INFO] Shutting down...");
                     System.exit(0);
@@ -564,21 +565,21 @@ public class Initiator {
     }
 
     /**
-     * Validate the MessageType of the message
+     * Validate the MessageTypeIn of the message
      *
      * @param args The message broken up into elements based on commas
      *
-     * @return The MessageType (UNKNOWN is non valid)
+     * @return The MessageTypeIn (UNKNOWN is non valid)
      */
-    private MessageType getValidMessageType(String[] args) {
+    private MessageTypeIn getValidMessageType(String[] args) {
         if (args.length > 0 && args[I_MESSAGE_TYPE] != null) {
             try {
-                return MessageType.valueOf(args[I_MESSAGE_TYPE].trim());
+                return MessageTypeIn.valueOf(args[I_MESSAGE_TYPE].trim());
             } catch (IllegalArgumentException e) {
-                return MessageType.UNKNOWN;
+                return MessageTypeIn.UNKNOWN;
             }
         } else {
-            return MessageType.UNKNOWN;
+            return MessageTypeIn.UNKNOWN;
         }
     }
 
