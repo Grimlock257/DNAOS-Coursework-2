@@ -185,7 +185,7 @@ public class Initiator {
         String[] args = message.split(",");
 
         // Nice formatting
-        System.out.println("===============================================================================");
+        System.out.println("\n===============================================================================");
 
         // Perform appropriate action depending on the message type
         switch (getValidMessageType(args)) {
@@ -347,6 +347,9 @@ public class Initiator {
 
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
+
+        System.out.println("===============================================================================");
+        System.out.print("Press enter to input...");
     }
 
     /**
@@ -369,6 +372,16 @@ public class Initiator {
      * Get input from the user search as the command they want to issue, and any required arguments
      */
     private void getUserInput() {
+        String displayOptions = null;
+
+        while (displayOptions == null) {
+            try {
+                displayOptions = keyboard.readLine();
+            } catch (IOException e) {
+                System.err.println("[ERROR] IO Errro");
+            }
+        }
+
         System.out.println("===============================================================================");
 
         // Ask what type of command to carry out
@@ -381,6 +394,8 @@ public class Initiator {
 
         // Convert their number selection back to the enum value
         CommandOptions selected = CommandOptions.values[menuSelection - 1];
+
+        System.out.println("===============================================================================");
 
         // Provide the relevant input form depending on the menu option they selected
         switch (selected) {
@@ -480,6 +495,9 @@ public class Initiator {
             default:
                 System.err.println("[ERROR] Something went wrong... unknown option '" + selected.toString() + "'");
         }
+
+        System.out.println("===============================================================================");
+        System.out.print("Press enter to input...");
     }
 
     /**
