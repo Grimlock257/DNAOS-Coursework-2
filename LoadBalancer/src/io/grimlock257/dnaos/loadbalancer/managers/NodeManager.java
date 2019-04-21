@@ -64,6 +64,11 @@ public class NodeManager {
         nodes.put(node, new Timer());
         resetIsAliveTimer(node.getName());
 
+        // Sort the nodes as new node
+        if (allocationMethod == AllocationMethod.WEIGHTED) {
+            sortNodes();
+        }
+
         return true;
     }
 
@@ -74,6 +79,11 @@ public class NodeManager {
      */
     public void removeNode(Node node) {
         nodes.remove(node);
+
+        // Sort the nodes as node removed
+        if (allocationMethod == AllocationMethod.WEIGHTED) {
+            sortNodes();
+        }
     }
 
     /**
