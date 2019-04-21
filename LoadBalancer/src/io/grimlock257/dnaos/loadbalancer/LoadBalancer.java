@@ -39,6 +39,7 @@ public class LoadBalancer {
     private final int I_SHUTDOWN_NODE_NAME = 1;
     private final int I_DATA_DUMP_NODE_NAME = 1;
     private final int I_IS_ALIVE_NODE_NAME = 1;
+    private final int I_NODE_RESIGN_NAME = 1;
 
     // Information about the connected initiator
     private String initiatorIP;
@@ -457,6 +458,27 @@ public class LoadBalancer {
                         System.out.println("[INFO] Received alive message from node '" + isAliveNodeName + "'");
                         nodeManager.resetIsAliveTimer(isAliveNodeName);
                         System.out.println("[INFO] Is alive timer reset for node '" + isAliveNodeName + "'");
+                    }
+                }
+
+                break;
+            case NODE_RESIGN:
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+
+                String resignNodeName = getValidStringArg(args, I_NODE_RESIGN_NAME);
+
+                if (resignNodeName == null) {
+                    System.out.println("[ERROR] Some of the supplied information was invalid");
+                } else {
+                    Node resignNode = nodeManager.findByName(resignNodeName);
+
+                    if (resignNode == null) {
+                        System.out.println("[ERROR] Node details could not be removed as no node with name '" + resignNodeName + "' was found\n");
+                    } else {
+                        System.out.println("[INFO] Received resignation from node '" + resignNodeName + "'");
+                        nodeManager.shutdownViaResign(resignNode);
+
+                        System.out.println("\n[INFO] Node '" + resignNodeName + "' has been removed from the Load Balancer");
                     }
                 }
 

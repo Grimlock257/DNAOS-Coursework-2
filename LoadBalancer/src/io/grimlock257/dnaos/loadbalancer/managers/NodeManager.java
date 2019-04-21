@@ -258,6 +258,18 @@ public class NodeManager {
     }
 
     /**
+     * Remove and deallocate jobs from the resigned node
+     *
+     * @param node The node that has resigned
+     */
+    public void shutdownViaResign(Node node) {
+        removeNode(node);
+
+        // Deallocate jobs relating to the specified node
+        JobManager.getInstance().deallocateJobs(node);
+    }
+
+    /**
      * Find the specified node object in the nodes LinkedHashMap using the supplied name
      *
      * @param nodeName The name of the node to locate in the nodes LinkedHashMap

@@ -7,6 +7,9 @@ import io.grimlock257.dnaos.node.managers.MessageManager;
 import io.grimlock257.dnaos.node.message.MessageTypeIn;
 import io.grimlock257.dnaos.node.message.MessageTypeOut;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -53,6 +56,9 @@ public class Node {
     private MessageManager messageManager;
     private JobManager jobManager;
 
+    // Store a reference to the keyboard
+    private BufferedReader keyboard;
+
     /**
      * Create a new node instance
      *
@@ -82,6 +88,8 @@ public class Node {
             messageManager = MessageManager.getInstance();
             messageManager.init(socket);
             jobManager = JobManager.getInstance();
+
+            keyboard = new BufferedReader(new InputStreamReader(System.in));
 
             lbAddr = InetAddress.getByName(lbHost);
             addr = InetAddress.getLocalHost().getHostAddress();
@@ -145,12 +153,28 @@ public class Node {
 
         // The while loop has ended which means we have successfully connected; terminate the timer
         timer.cancel();
+
+        // Nice formatting and display prompt on how to shutdown
+        System.out.println("===============================================================================");
+        System.out.println("Press enter at any time to shutdown node...");
     }
 
     /**
      * Check for incoming packets, and send any packets to be processed
      */
     private void loop() {
+        // Create a thread to continuously get user input
+        Thread userInput = new Thread("node_user_input") {
+            @Override
+            public void run() {
+                while (true) {
+                    getUserInput();
+                }
+            }
+        };
+
+        userInput.start();
+
         while (true) {
             // Process messages (if available)
             String nextMessage = messageManager.getNextMessage();
@@ -348,6 +372,46 @@ public class Node {
     }
 
     /**
+     * Get input from the user search as the command they want to issue, and any required arguments
+     */
+    private void getUserInput() {
+        String displayOptions = null;
+
+        // Wait for the user to press enter before displaying the menu
+        while (displayOptions == null) {
+            try {
+                displayOptions = keyboard.readLine();
+            } catch (IOException e) {
+                System.err.println("[ERROR] IO Error");
+            }
+        }
+
+        // Ask the user if they want to shutdown
+        System.out.println("===============================================================================");
+        System.out.print("Are you sure you want to shutdown this node? (Y/N): ");
+
+        // Get selection from the user
+        String selection = getStringInput().toLowerCase();
+
+        while (!selection.equals("y") && !selection.equals("n")) {
+            System.out.println("[INPUT ERROR] Please enter either Y or N");
+            System.out.print("> ");
+
+            selection = getStringInput().toLowerCase();
+        }
+
+        // If Y then send resignation message to Load Balancer and shutdown
+        if (selection.equals("y")) {
+            messageManager.send(MessageTypeOut.NODE_RESIGN.toString() + "," + name, lbAddr, lbPort);
+
+            System.out.println("[INFO] Shutting down...");
+            System.exit(0);
+        } else {
+            System.out.println("[INFO] Shutdown cancelled");
+        }
+    }
+
+    /**
      * Create a data dump of the node. Shows node details, completed (sent to load balancer)
      * jobs and currently in progress jobs
      *
@@ -423,6 +487,31 @@ public class Node {
         System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
 
         return true;
+    }
+
+    /**
+     * Get validated string input from the user (i.e input with a length greater than 0)
+     *
+     * @return The validated string
+     */
+    private String getStringInput() {
+        String userInput = "";
+
+        while (userInput.length() < 1) {
+            try {
+                userInput = keyboard.readLine();
+
+                if (userInput.length() < 1) {
+                    System.out.println("[INPUT ERROR] Please enter a string with a length greater than 1");
+                } else {
+                    break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return userInput;
     }
 
     /**
