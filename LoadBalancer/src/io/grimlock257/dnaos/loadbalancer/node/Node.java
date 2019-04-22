@@ -19,6 +19,9 @@ public class Node {
     private int capacity;
     private String name;
 
+    // Stores how many strikes have been allocated for no reply to a IS_ALIVE message
+    private int strikes;
+
     /**
      * Node constructor
      *
@@ -32,6 +35,8 @@ public class Node {
         this.addr = addr;
         this.capacity = capacity;
         this.name = name;
+
+        this.strikes = 0;
     }
 
     /**
@@ -60,6 +65,27 @@ public class Node {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * @return The strikes allocated to the node
+     */
+    public int getStrikes() {
+        return strikes;
+    }
+
+    /**
+     * Reset the strikes allocated to the node
+     */
+    public void resetStrikes() {
+        strikes = 0;
+    }
+
+    /**
+     * Increment the amount of strikes allocated to the node
+     */
+    public void incrementStrikes() {
+        strikes++;
     }
 
     /**

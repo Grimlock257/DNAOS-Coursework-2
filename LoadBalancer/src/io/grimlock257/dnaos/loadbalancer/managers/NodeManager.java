@@ -24,7 +24,10 @@ public class NodeManager {
     private LinkedHashMap<Node, Timer> nodes;
 
     // How frequently to check whether a node is still available or not
-    private final int CHECK_ALIVE_INTERVAL = 3 * 60 * 1000;
+    private final int CHECK_ALIVE_INTERVAL = 5 * 1000;//3 * 60 * 1000;
+
+    // Maximum amount of allowed strikes before removing the node
+    private final int MAXIMUM_STRIKES = 3;
 
     /**
      * NodeManager constructor
@@ -78,6 +81,9 @@ public class NodeManager {
      * @param node The node to remove from the nodes LinkedHashMap
      */
     public void removeNode(Node node) {
+        // Stop the isAliveTimer for the node
+        stopIsAliveTimer(node);
+
         nodes.remove(node);
 
         // Sort the nodes as node removed
@@ -164,7 +170,8 @@ public class NodeManager {
 
     /**
      * Reset the isAlive timer for the specified Node. The timer sends a IS_ALIVE message to the associated Node
-     * at a specified time interval to see if the node is still reachable
+     * at a specified time interval to see if the node is still reachable. This method should only be called when
+     * a message has been received from the Node in question
      *
      * @param nodeName The name of the node to reset the timer for
      */
@@ -177,6 +184,9 @@ public class NodeManager {
 
             // The current iteration node name matches the supplied nodeName
             if (theNode.getName().equals(nodeName)) {
+                // Received a message from the node (as this method has been called), so reset strikes
+                theNode.resetStrikes();
+
                 // Cancel the existing time and remove
                 theTimer.cancel();
                 theTimer.purge();
@@ -192,14 +202,53 @@ public class NodeManager {
                     @Override
                     public void run() {
                         try {
-                            // Send a IS_ALIVE message to the node
-                            MessageManager.getInstance().send(MessageTypeOut.IS_ALIVE.toString(), theNode.getAddr(), theNode.getPort());
+                            if (theNode.getStrikes() >= MAXIMUM_STRIKES) {
+                                System.out.println("===============================================================================");
+                                System.out.println("[INFO] Maximum strikes for IS_ALIVE reached for node '" + theNode.getName() + "', initiating removal...");
+                                shutdownNode(theNode);
+                            } else {
+                                // Send a IS_ALIVE message to the node
+                                System.out.println("===============================================================================");
+                                MessageManager.getInstance().send(MessageTypeOut.IS_ALIVE.toString(), theNode.getAddr(), theNode.getPort());
+                                System.out.println("[INFO] Issue IS_ALIVE message to node '" + theNode.getName() + "'");
+                                theNode.incrementStrikes();
+                            }
                         } catch (Exception e) {
                             System.err.println("[ERROR] Unhandled Exception thrown");
                             e.printStackTrace();
                         }
                     }
-                }, CHECK_ALIVE_INTERVAL);
+                }, CHECK_ALIVE_INTERVAL, CHECK_ALIVE_INTERVAL);
+            }
+        }
+    }
+
+    /**
+     * Stop the isAlive timer for a node
+     *
+     * @param node The node whose isAliveTimer to stop
+     */
+    private void stopIsAliveTimer(Node node) {
+        // Iterate through the LinkedHashMap to find the Node matching the supplied node
+        for (Map.Entry<Node, Timer> nodeDetails : nodes.entrySet()) {
+            // Store key/value as variable for ease
+            Node theNode = nodeDetails.getKey();
+            Timer theTimer = nodeDetails.getValue();
+
+            // The current iteration node name matches the supplied nodeName
+            if (theNode.equals(node)) {
+                // Received a message from the node (as this method has been called), so reset strikes
+                theNode.resetStrikes();
+
+                // Cancel the existing time and remove
+                theTimer.cancel();
+                theTimer.purge();
+
+                // Create a new Timer object in its place
+                theTimer = new Timer();
+
+                // Store the new Timer object in the LinkedHashMap, overwriting the old
+                nodeDetails.setValue(theTimer);
             }
         }
     }
@@ -227,6 +276,9 @@ public class NodeManager {
 
             // Send message to node saying shutdown
             MessageManager.getInstance().send(MessageTypeOut.NODE_SHUTDOWN.toString(), node.getAddr(), node.getPort());
+
+            // Stop the isAliveTimer for the node
+            stopIsAliveTimer(node);
 
             // Remove the node from the list
             itr.remove();
