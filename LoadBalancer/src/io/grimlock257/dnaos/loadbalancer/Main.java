@@ -31,9 +31,9 @@ public class Main {
                 System.exit(1);
             }
 
-            InetAddress addr = null;
+            String ip = null;
             try {
-                addr = InetAddress.getByName("localhost");
+                ip = InetAddress.getLocalHost().getHostAddress();
             } catch (UnknownHostException e) {
                 System.err.println("[ERROR] UnknownHostException thrown, exiting...");
                 e.printStackTrace();
@@ -43,7 +43,7 @@ public class Main {
             // Display information about the Load Balancer
             System.out.println("[INFO] Load Balancer online");
             System.out.println("[INFO] Load Balancer details:");
-            System.out.println("[INFO] - IP: " + addr);
+            System.out.println("[INFO] - IP: " + ip);
             System.out.println("[INFO] - Port: " + port);
             System.out.println("[INFO] - Allocation Method: " + allocationMethod.toString());
             System.out.println("===============================================================================");

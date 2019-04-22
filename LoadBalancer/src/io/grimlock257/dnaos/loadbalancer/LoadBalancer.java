@@ -210,7 +210,7 @@ public class LoadBalancer {
 
                 String newInitiatorIP = getValidStringArg(args, I_INITIATOR_IP);
                 int newInitiatorPort = getValidIntArg(args, I_INITIATOR_PORT);
-                InetAddress newInitiatorAddr = InetAddress.getByName(initiatorIP);
+                InetAddress newInitiatorAddr = InetAddress.getByName(newInitiatorIP);
 
                 if (newInitiatorIP == null || newInitiatorPort == -1) {
                     System.out.println("[ERROR] Initiator was not added, some of the supplied information was invalid");

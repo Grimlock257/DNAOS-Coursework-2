@@ -42,7 +42,7 @@ public class Node {
     private String name;
     private int capacity;
     private int port;
-    private String addr; // TODO IP?
+    private String ip;
 
     // Information about the load balancer
     private String lbHost;
@@ -92,7 +92,7 @@ public class Node {
             keyboard = new BufferedReader(new InputStreamReader(System.in));
 
             lbAddr = InetAddress.getByName(lbHost);
-            addr = InetAddress.getLocalHost().getHostAddress();
+            ip = InetAddress.getLocalHost().getHostAddress();
 
             connect();
             loop();
@@ -133,7 +133,7 @@ public class Node {
             public void run() {
                 try {
                     // Send register message to the Load Balancer
-                    messageManager.send(MessageTypeOut.NODE_REGISTER.toString() + "," + addr + "," + port + "," + name + "," + capacity, lbAddr, lbPort);
+                    messageManager.send(MessageTypeOut.NODE_REGISTER.toString() + "," + ip + "," + port + "," + name + "," + capacity, lbAddr, lbPort);
                 } catch (Exception e) {
                     System.err.println("[ERROR] Unhandled Exception thrown");
                     e.printStackTrace();
@@ -574,6 +574,6 @@ public class Node {
      */
     @Override
     public String toString() {
-        return "Name: " + name + ", Capacity: " + capacity + ", Address: " + addr + ", Port: " + port + ", Usage: " + (jobManager.getAmountOfActiveJobs() / (double) capacity) * 100 + "%";
+        return "Name: " + name + ", Capacity: " + capacity + ", Address: " + ip + ", Port: " + port + ", Usage: " + (jobManager.getAmountOfActiveJobs() / (double) capacity) * 100 + "%";
     }
 }

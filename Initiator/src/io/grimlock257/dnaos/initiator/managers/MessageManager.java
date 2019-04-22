@@ -93,7 +93,7 @@ public class MessageManager {
                     }
 
                     // Store the message into the LinkedList of messages, assuming the message length isn't 0
-                    String message = new String(buffer);
+                    String message = new String(buffer).trim();
                     if (message.length() > 0) {
                         HashMap<String, Boolean> newMsg = new HashMap<String, Boolean>() {{
                             put(message, false);

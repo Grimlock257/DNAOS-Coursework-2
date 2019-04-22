@@ -27,9 +27,9 @@ public class Main {
             String lbHost = args[3];
             int lbPort = Integer.parseInt(args[4]);
 
-            InetAddress addr = null;
+            String ip = null;
             try {
-                addr = InetAddress.getByName("localhost");
+                ip = InetAddress.getLocalHost().getHostAddress();
             } catch (UnknownHostException e) {
                 System.err.println("[ERROR] UnknownHostException thrown, exiting...");
                 e.printStackTrace();
@@ -41,7 +41,7 @@ public class Main {
             System.out.println("[INFO] Node details:");
             System.out.println("[INFO] - Name: " + name);
             System.out.println("[INFO] - Capacity: " + capacity);
-            System.out.println("[INFO] - IP: " + addr);
+            System.out.println("[INFO] - IP: " + ip);
             System.out.println("[INFO] - Port: " + port);
             System.out.println("[INFO] - Load Balancer IP: " + lbHost);
             System.out.println("[INFO] - Load Balancer Port: " + lbPort);

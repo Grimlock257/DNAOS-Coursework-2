@@ -378,7 +378,7 @@ public class Initiator {
             try {
                 displayOptions = keyboard.readLine();
             } catch (IOException e) {
-                System.err.println("[ERROR] IO Errro");
+                System.err.println("[ERROR] IO Error");
             }
         }
 
