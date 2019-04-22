@@ -183,7 +183,7 @@ public class NodeManager {
             Timer theTimer = nodeDetails.getValue();
 
             // The current iteration node name matches the supplied nodeName
-            if (theNode.getName().equals(nodeName)) {
+            if (theNode.getName().equalsIgnoreCase(nodeName)) {
                 // Received a message from the node (as this method has been called), so reset strikes
                 theNode.resetStrikes();
 
@@ -330,7 +330,7 @@ public class NodeManager {
      */
     public Node findByName(String nodeName) {
         for (Node node : nodes.keySet()) {
-            if (node.getName().equals(nodeName)) {
+            if (node.getName().equalsIgnoreCase(nodeName)) {
                 return node;
             }
         }

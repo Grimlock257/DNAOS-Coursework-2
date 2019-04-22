@@ -67,7 +67,7 @@ public class JobManager {
      */
     public JobStatus getJobStatus(String jobName) {
         for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
-            if (jobDetails.getKey().getName().equals(jobName)) {
+            if (jobDetails.getKey().getName().equalsIgnoreCase(jobName)) {
                 return jobDetails.getValue();
             }
         }
@@ -94,7 +94,7 @@ public class JobManager {
      */
     public Job findByName(String jobName) {
         for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
-            if (jobDetails.getKey().getName().equals(jobName)) {
+            if (jobDetails.getKey().getName().equalsIgnoreCase(jobName)) {
                 return jobDetails.getKey();
             }
         }
