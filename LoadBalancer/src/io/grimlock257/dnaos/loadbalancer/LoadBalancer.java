@@ -145,7 +145,7 @@ public class LoadBalancer {
                     messageManager.send(MessageTypeOut.NEW_JOB.toString() + "," + nextJob.getName() + "," + nextJob.getDuration(), freestNode.getAddr(), freestNode.getPort());
                     System.out.println("");
 
-                    System.out.println("[INFO] Node '" + freestNode.getName() + "' utilization is now " + freestNode.calcUsage() + "% (max capacity is " + freestNode.getCapacity() + ")");
+                    System.out.println("[INFO] Node '" + freestNode.getName() + "' utilization is now " + String.format("%.2f", freestNode.calcUsage()) + "% (max capacity is " + freestNode.getCapacity() + ")");
                 }
             }
         }

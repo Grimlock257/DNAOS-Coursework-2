@@ -102,6 +102,6 @@ public class Node {
      */
     @Override
     public String toString() {
-        return "Name: " + name + ", Capacity: " + capacity + ", Address: " + addr + ", Port: " + port + ", Usage: " + calcUsage() + "%";
+        return "Name: " + name + ", Capacity: " + capacity + ", Address: " + addr + ", Port: " + port + ", Usage: " + String.format("%.2f", calcUsage()) + "%";
     }
 }

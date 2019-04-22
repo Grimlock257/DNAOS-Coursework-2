@@ -24,7 +24,7 @@ public class NodeManager {
     private LinkedHashMap<Node, Timer> nodes;
 
     // How frequently to check whether a node is still available or not
-    private final int CHECK_ALIVE_INTERVAL = 5 * 1000;//3 * 60 * 1000;
+    private final int CHECK_ALIVE_INTERVAL = 3 * 60 * 1000;
 
     // Maximum amount of allowed strikes before removing the node
     private final int MAXIMUM_STRIKES = 3;

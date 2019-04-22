@@ -574,6 +574,6 @@ public class Node {
      */
     @Override
     public String toString() {
-        return "Name: " + name + ", Capacity: " + capacity + ", Address: " + ip + ", Port: " + port + ", Usage: " + (jobManager.getAmountOfActiveJobs() / (double) capacity) * 100 + "%";
+        return "Name: " + name + ", Capacity: " + capacity + ", Address: " + ip + ", Port: " + port + ", Usage: " + String.format("%.2f", (jobManager.getAmountOfActiveJobs() / (double) capacity) * 100) + "%";
     }
 }
