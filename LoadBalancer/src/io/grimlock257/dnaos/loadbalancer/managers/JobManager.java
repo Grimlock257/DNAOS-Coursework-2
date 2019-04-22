@@ -196,6 +196,23 @@ public class JobManager {
     }
 
     /**
+     * Get the JobStatus of the specified job
+     *
+     * @param job The job for which to find the current status
+     *
+     * @return The JobStatus of the supplied job, null if job is not found
+     */
+    public JobStatus getJobStatus(Job job) {
+        for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
+            if (jobDetails.getKey().equals(job)) {
+                return jobDetails.getValue().getJobStatus();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Used to display the jobs LinkedHashMap in a nice, readable format
      *
      * @return The formatted string
