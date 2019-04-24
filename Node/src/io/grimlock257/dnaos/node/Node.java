@@ -188,22 +188,7 @@ public class Node {
 
             if (nextJob != null) {
                 // A new thread is created for each job to be ran
-                Thread jobProcessing = new Thread("job_processing_" + nextJob.getName().toLowerCase().replace(" ", "_")) {
-                    @Override
-                    public void run() {
-                        // Process the job
-                        if (processJob(nextJob)) {
-                            // Send the complete job back to the Load Balancer
-                            MessageManager.getInstance().send(MessageTypeOut.COMPLETE_JOB + "," + nextJob.getName(), lbAddr, lbPort);
-                            JobManager.getInstance().updateJobStatus(nextJob, JobStatus.SENT);
-                            System.out.println("");
-
-                            System.out.println("[INFO] Job '" + nextJob.getName() + "' has been sent to the Load Balancer\n");
-                            System.out.println("[INFO] Current job list:\n" + jobManager.toString());
-                        }
-                    }
-                };
-
+                Thread jobProcessing = new Thread(new JobProcessRunnable(nextJob, lbAddr, lbPort),"job_processing_" + nextJob.getName().toLowerCase().replace(" ", "_"));
                 jobProcessing.start();
             }
         }
@@ -456,37 +441,6 @@ public class Node {
         sbResult.append(sbAliveThreads.toString());
 
         return sbResult.toString();
-    }
-
-    /**
-     * Process the passed in job
-     *
-     * @param job The job to be processed
-     *
-     * @return Whether or not the job processing was interrupted
-     */
-    private boolean processJob(Job job) {
-        System.out.println("===============================================================================");
-        System.out.println("[INFO] Began processing job '" + job.getName() + "' in thread '" + Thread.currentThread().getName() + "'...\n");
-        System.out.println("[INFO] Current job list:\n" + jobManager.toString());
-
-        // Try sleep for the job duration
-        try {
-            Thread.sleep(job.getDuration() * 1000);
-        } catch (InterruptedException e) {
-            return false;
-        }
-
-        System.out.println("===============================================================================");
-        System.out.println("[INFO] Job '" + job.getName() + "' complete\n");
-        System.out.println("[INFO] Previous job information for job '" + job.getName() + "':\n" + jobManager.jobToString(job.getName()) + "\n");
-
-        // Update the job status to COMPLETE
-        JobManager.getInstance().updateJobStatus(job, JobStatus.COMPLETE);
-
-        System.out.println("[INFO] Current job list:\n" + jobManager.toString() + "\n");
-
-        return true;
     }
 
     /**
