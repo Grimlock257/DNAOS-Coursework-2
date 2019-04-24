@@ -277,7 +277,7 @@ public class Node {
                 if (cancelJobName == null) {
                     System.out.println("[ERROR] Job was not cancelled, some of the supplied information was invalid");
                 } else {
-                    Job cancelJob = jobManager.findByName(cancelJobName);
+                    Job cancelJob = jobManager.getByName(cancelJobName);
 
                     if (cancelJob == null) {
                         System.out.println("[ERROR] Job was not cancelled as no job with name '" + cancelJobName + "' was found");

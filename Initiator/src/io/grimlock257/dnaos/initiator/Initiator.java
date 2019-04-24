@@ -221,7 +221,7 @@ public class Initiator {
                 if (jobName == null) {
                     System.out.println("[ERROR] Job was not altered, some of the supplied information was invalid");
                 } else {
-                    Job completedJob = jobManager.findByName(jobName);
+                    Job completedJob = jobManager.getByName(jobName);
 
                     jobManager.updateJobStatus(completedJob, JobStatus.COMPLETE);
 
@@ -243,7 +243,7 @@ public class Initiator {
                 if (cancelledJobName == null) {
                     System.out.println("[ERROR] Job was not altered, some of the supplied information was invalid");
                 } else {
-                    Job cancelledJob = jobManager.findByName(cancelledJobName);
+                    Job cancelledJob = jobManager.getByName(cancelledJobName);
 
                     jobManager.updateJobStatus(cancelledJob, JobStatus.CANCELLED);
 
@@ -282,7 +282,7 @@ public class Initiator {
                 if (shutdownSuccessNodeName == null) {
                     System.out.println("[ERROR] Some of the supplied information was invalid");
                 } else {
-                    System.out.println("[INFO] The requested shutdown of '" + shutdownSuccessNodeName + "' was successful\n");
+                    System.out.println("[INFO] The requested shutdown of '" + shutdownSuccessNodeName + "' was successful");
                 }
 
                 break;
@@ -410,8 +410,9 @@ public class Initiator {
                 boolean hasJobAdded = jobManager.addJob(newJob);
 
                 if (!hasJobAdded) {
-                    System.out.println("[ERROR] Job was not added, the supplied information matched an existing job\n");
+                    System.out.println("\n[ERROR] Job was not added, the supplied information matched an existing job\n");
                 } else {
+                    System.out.println(""); // Space between user input and feedback text
                     messageManager.send(MessageTypeOut.NEW_JOB.toString() + "," + jobName + "," + jobDuration, lbAddr, lbPort);
 
                     System.out.println("\n[INFO] New job added: " + newJob.toString() + "\n");
@@ -424,17 +425,18 @@ public class Initiator {
                 String cancelJobName = getStringInput();
 
                 if (cancelJobName == null) {
-                    System.out.println("[ERROR] Cancel job request was not sent, some of the supplied information was invalid");
+                    System.out.println("\n[ERROR] Cancel job request was not sent, some of the supplied information was invalid");
                 } else {
-                    Job cancelJob = jobManager.findByName(cancelJobName);
+                    Job cancelJob = jobManager.getByName(cancelJobName);
 
                     if (cancelJob == null) {
-                        System.out.println("[ERROR] Cancel job request was not issued as no job with name '" + cancelJobName + "' was found");
+                        System.out.println("\n[ERROR] Cancel job request was not issued as no job with name '" + cancelJobName + "' was found");
                     } else if (jobManager.getJobStatus(cancelJobName) == JobStatus.COMPLETE) {
-                        System.out.println("[ERROR] Cancel job request was not sent as the job is already complete");
+                        System.out.println("\n[ERROR] Cancel job request was not sent as the job is already complete");
                     } else {
                         jobManager.updateJobStatus(cancelJob, JobStatus.REQUESTED_CANCEL);
 
+                        System.out.println(""); // Space between user input and feedback text
                         messageManager.send(MessageTypeOut.CANCEL_JOB_REQUEST.toString() + "," + cancelJobName, lbAddr, lbPort);
 
                         System.out.println("\n[INFO] Job cancel request has been issued");
@@ -457,6 +459,7 @@ public class Initiator {
 
                 String nodeToDataDump = getStringInput();
 
+                System.out.println(""); // Space between user input and feedback text
                 messageManager.send(MessageTypeOut.DATA_DUMP_NODE_SPECIFIC_REQUEST.toString() + "," + nodeToDataDump, lbAddr, lbPort);
                 System.out.println("");
 
@@ -466,6 +469,7 @@ public class Initiator {
 
                 String nodeToShutdown = getStringInput();
 
+                System.out.println(""); // Space between user input and feedback text
                 messageManager.send(MessageTypeOut.NODE_SHUTDOWN_SPECIFIC.toString() + "," + nodeToShutdown, lbAddr, lbPort);
                 System.out.println("");
 
@@ -483,6 +487,7 @@ public class Initiator {
                 }
 
                 if (selection.equals("y")) {
+                    System.out.println(""); // Space between user input and feedback text
                     messageManager.send(MessageTypeOut.LB_SHUTDOWN.toString(), lbAddr, lbPort);
 
                     System.out.println("[INFO] Shutting down...");

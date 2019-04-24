@@ -142,7 +142,7 @@ public class JobManager {
      *
      * @return The allocated node, or null if not found
      */
-    public Node getNodeByJob(String jobName) {
+    public Node getJobNode(String jobName) {
         for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
             if (jobDetails.getKey().getName().equalsIgnoreCase(jobName)) {
                 return jobDetails.getValue().getNode();
@@ -159,7 +159,7 @@ public class JobManager {
      *
      * @return The job object matching the name, or null if not found
      */
-    public Job findByName(String jobName) {
+    public Job getByName(String jobName) {
         for (Map.Entry<Job, JobAlloc> jobDetails : jobs.entrySet()) {
             if (jobDetails.getKey().getName().equalsIgnoreCase(jobName)) {
                 return jobDetails.getKey();

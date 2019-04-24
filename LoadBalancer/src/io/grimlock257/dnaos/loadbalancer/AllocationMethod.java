@@ -9,8 +9,5 @@ package io.grimlock257.dnaos.loadbalancer;
  */
 public enum AllocationMethod {
     WEIGHTED,
-    NON_WEIGHTED;
-
-    // Cache the values array to avoid calling it every time
-    public static final AllocationMethod values[] = values();
+    NON_WEIGHTED
 }

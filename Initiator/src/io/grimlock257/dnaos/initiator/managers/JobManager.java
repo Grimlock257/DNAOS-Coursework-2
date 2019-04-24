@@ -92,7 +92,7 @@ public class JobManager {
      *
      * @return The job object matching the name, or null if not found
      */
-    public Job findByName(String jobName) {
+    public Job getByName(String jobName) {
         for (Map.Entry<Job, JobStatus> jobDetails : jobs.entrySet()) {
             if (jobDetails.getKey().getName().equalsIgnoreCase(jobName)) {
                 return jobDetails.getKey();

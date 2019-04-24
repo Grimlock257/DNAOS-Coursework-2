@@ -184,7 +184,7 @@ public class LoadBalancer {
                 if (shutdownNodeName == null) {
                     System.out.println("[ERROR] Node was not shutdown, some of the supplied information was invalid");
                 } else {
-                    Node shutdownNode = nodeManager.findByName(shutdownNodeName);
+                    Node shutdownNode = nodeManager.getByName(shutdownNodeName);
 
                     if (shutdownNode == null) {
                         System.out.println("[ERROR] Node was not shutdown as no node with name '" + shutdownNodeName + "' was found\n");
@@ -290,12 +290,12 @@ public class LoadBalancer {
                 if (completedJobName == null) {
                     System.out.println("[ERROR] Job was not altered, some of the supplied information was invalid");
                 } else {
-                    Job completedJob = jobManager.findByName(completedJobName);
+                    Job completedJob = jobManager.getByName(completedJobName);
 
                     if (completedJob == null) {
                         System.out.println("[ERROR] Job was not marked as complete or sent to the initiator as no job with name '" + completedJobName + "' was found");
                     } else {
-                        Node completedJobNode = jobManager.getNodeByJob(completedJobName);
+                        Node completedJobNode = jobManager.getJobNode(completedJobName);
                         System.out.println("[INFO] Previous job information for job '" + completedJob.getName() + "':\n" + jobManager.jobToString(completedJobName) + "\n");
                         System.out.println("[INFO] Previous node information for node '" + completedJobNode.getName() + "':\n" + completedJobNode.toString() + "\n");
 
@@ -322,7 +322,7 @@ public class LoadBalancer {
                 if (cancelJobName == null) {
                     System.out.println("[ERROR] Job cancel request was not issued, some of the supplied information was invalid");
                 } else {
-                    Job cancelJob = jobManager.findByName(cancelJobName);
+                    Job cancelJob = jobManager.getByName(cancelJobName);
 
                     if (cancelJob == null) {
                         System.out.println("[ERROR] Job cancel request was not issued as no job with name '" + cancelJobName + "' was found");
@@ -330,7 +330,7 @@ public class LoadBalancer {
                         JobStatus jobStatus = jobManager.getJobStatus(cancelJob);
 
                         if (jobStatus == JobStatus.ALLOCATED) {
-                            Node jobNode = jobManager.getNodeByJob(cancelJob.getName());
+                            Node jobNode = jobManager.getJobNode(cancelJob.getName());
 
                             if (jobNode == null) {
                                 System.out.println("[ERROR] The node allocated to the job could not be found");
@@ -368,7 +368,7 @@ public class LoadBalancer {
                 if (cancelledJobName == null) {
                     System.out.println("[ERROR] Job was not altered, some of the supplied information was invalid");
                 } else {
-                    Job cancelledJob = jobManager.findByName(cancelledJobName);
+                    Job cancelledJob = jobManager.getByName(cancelledJobName);
 
                     if (cancelledJob == null) {
                         System.out.println("[ERROR] Job was not marked as cancelled or sent to the initiator as no job with name '" + cancelledJobName + "' was found");
@@ -383,7 +383,7 @@ public class LoadBalancer {
                         System.out.println("[INFO] Job '" + cancelledJob.getName() + "' cancelled\n");
                         System.out.println("[INFO] Current job list:\n" + jobManager.toString());
 
-                        String cancelledJobNodeName = jobManager.getNodeByJob(cancelledJobName).getName();
+                        String cancelledJobNodeName = jobManager.getJobNode(cancelledJobName).getName();
                         nodeManager.resetIsAliveTimer(cancelledJobNodeName);
                         System.out.println("\n[INFO] Is alive timer reset for node '" + cancelledJobNodeName + "'");
                     }
@@ -418,7 +418,7 @@ public class LoadBalancer {
                 if (nodeToDataDump == null) {
                     System.out.println("[ERROR] Node data dump was not requested, some of the supplied information was invalid");
                 } else {
-                    Node dataDumpNode = nodeManager.findByName(nodeToDataDump);
+                    Node dataDumpNode = nodeManager.getByName(nodeToDataDump);
 
                     if (dataDumpNode == null) {
                         System.out.println("[ERROR] Node data dump was not requested as no node with name '" + nodeToDataDump + "' was found\n");
@@ -457,14 +457,14 @@ public class LoadBalancer {
 
                 break;
             case IS_ALIVE_CONFIRM:
-                System.out.println("[INFO] Received '" + message + "', processing...\n");
+                System.out.println("[INFO] Received '" + message + "', processing...");
 
                 String isAliveNodeName = getValidStringArg(args, I_IS_ALIVE_NODE_NAME);
 
                 if (isAliveNodeName == null) {
                     System.out.println("[ERROR] Some of the supplied information was invalid");
                 } else {
-                    Node isAliveNode = nodeManager.findByName(isAliveNodeName);
+                    Node isAliveNode = nodeManager.getByName(isAliveNodeName);
 
                     if (isAliveNode == null) {
                         System.out.println("[ERROR] Node alive timer could not be reset as no node with name '" + isAliveNodeName + "' was found\n");
@@ -484,7 +484,7 @@ public class LoadBalancer {
                 if (resignNodeName == null) {
                     System.out.println("[ERROR] Some of the supplied information was invalid");
                 } else {
-                    Node resignNode = nodeManager.findByName(resignNodeName);
+                    Node resignNode = nodeManager.getByName(resignNodeName);
 
                     if (resignNode == null) {
                         System.out.println("[ERROR] Node details could not be removed as no node with name '" + resignNodeName + "' was found\n");

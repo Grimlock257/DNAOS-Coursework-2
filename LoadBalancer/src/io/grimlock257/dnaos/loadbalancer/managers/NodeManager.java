@@ -114,9 +114,8 @@ public class NodeManager {
 
                 break;
             case NON_WEIGHTED:
-                // If the LinkedHashMap is empty, return null, otherwise check if the nodeToUse = nodes
-                // LinkedHashMap size (if match, we reached end of the LinkedHashMap), if so, set nodeToUse
-                // to 0 and return the node at that position, otherwise just return the node at nodeToUse
+                // If the LinkedHashMap is empty, return null, otherwise make sure the nodeToUse element in the list has a
+                // usage of less than 100%, is so return this node otherwise return null
                 if (!nodes.isEmpty()) {
                     freestNode = (getNode(nodeToUse).calcUsage() < 100) ? getNode(nodeToUse) : null;
 
@@ -328,7 +327,7 @@ public class NodeManager {
      *
      * @return The node object matching the name, or null if not found
      */
-    public Node findByName(String nodeName) {
+    public Node getByName(String nodeName) {
         for (Node node : nodes.keySet()) {
             if (node.getName().equalsIgnoreCase(nodeName)) {
                 return node;
