@@ -338,6 +338,16 @@ public class Initiator {
                 }
 
                 break;
+            case LOAD_BALANCER_SHUTDOWN:
+                if (!connected) {
+                    System.err.println("[ERROR] Received '" + message + "', despite not being connected to a load balancer");
+                    break;
+                }
+
+                System.out.println("[INFO] Received '" + message + "', processing...\n");
+                System.out.println("[INFO] Load Balancer Shutting down, initiator shutting down...");
+                System.exit(0);
+
             case UNKNOWN:
             default:
                 if (!connected) {
@@ -369,7 +379,7 @@ public class Initiator {
     }
 
     /**
-     * Get input from the user search as the command they want to issue, and any required arguments
+     * Get input from the user such as the command they want to issue, and any required arguments
      */
     private void getUserInput() {
         String displayOptions = null;

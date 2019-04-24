@@ -10,6 +10,7 @@ package io.grimlock257.dnaos.initiator.message;
 public enum MessageTypeIn {
     REGISTER_CONFIRM,
     REGISTER_FAILURE,
+    LOAD_BALANCER_SHUTDOWN,
     COMPLETE_JOB,
     NODE_SHUTDOWN_SPECIFIC_FAILURE,
     NODE_SHUTDOWN_SPECIFIC_SUCCESS,

@@ -9,7 +9,9 @@ import io.grimlock257.dnaos.loadbalancer.message.MessageTypeIn;
 import io.grimlock257.dnaos.loadbalancer.message.MessageTypeOut;
 import io.grimlock257.dnaos.loadbalancer.node.Node;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.BindException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -61,6 +63,9 @@ public class LoadBalancer {
 
     private AllocationMethod allocationMethod;
 
+    // Store a reference to the keyboard
+    private BufferedReader keyboard;
+
     /**
      * Create a new load balancer instance
      *
@@ -86,7 +91,8 @@ public class LoadBalancer {
             nodeManager.setAllocationMethod(allocationMethod);
             jobManager = JobManager.getInstance();
 
-            // Have setup first?
+            keyboard = new BufferedReader(new InputStreamReader(System.in));
+
             loop();
         } catch (BindException e) {
             if (e.getMessage().toLowerCase().contains("address already in use")) {
@@ -117,6 +123,21 @@ public class LoadBalancer {
      * @throws IOException When a packet cannot be successfully retrieved on the socket
      */
     private void loop() throws IOException {
+        // Create a thread to continuously get user input
+        Thread userInput = new Thread("load_balancer_user_input") {
+            @Override
+            public void run() {
+                while (true) {
+                    getUserInput();
+                }
+            }
+        };
+
+        userInput.start();
+
+        System.out.println("Press enter at any time to shutdown load balancer...");
+        System.out.println("===============================================================================");
+
         System.out.println("Listening for messages...");
 
         while (true) {
@@ -501,6 +522,75 @@ public class LoadBalancer {
             default:
                 System.err.println("[ERROR] Received: '" + message + "', unknown argument");
         }
+    }
+
+    /**
+     * Get input from the user search as the command they want to issue, and any required arguments
+     */
+    private void getUserInput() {
+        String displayOptions = null;
+
+        // Wait for the user to press enter before displaying the menu
+        while (displayOptions == null) {
+            try {
+                displayOptions = keyboard.readLine();
+            } catch (IOException e) {
+                System.err.println("[ERROR] IO Error");
+            }
+        }
+
+        // Ask the user if they want to shutdown
+        System.out.println("===============================================================================");
+        System.out.print("Are you sure you want to shutdown this node? (Y/N): ");
+
+        // Get selection from the user
+        String selection = getStringInput().toLowerCase();
+
+        while (!selection.equals("y") && !selection.equals("n")) {
+            System.out.println("[INPUT ERROR] Please enter either Y or N");
+            System.out.print("> ");
+
+            selection = getStringInput().toLowerCase();
+        }
+
+        // If Y then send resignation message to Load Balancer and shutdown
+        if (selection.equals("y")) {
+            if (initiatorConnected) {
+                messageManager.send(MessageTypeOut.LOAD_BALANCER_SHUTDOWN.toString(), initiatorAddr, initiatorPort);
+            }
+
+            nodeManager.shutdownAllNodes();
+
+            System.out.println("[INFO] Shutting down...");
+            System.exit(0);
+        } else {
+            System.out.println("[INFO] Shutdown cancelled");
+        }
+    }
+
+    /**
+     * Get validated string input from the user (i.e input with a length greater than 0)
+     *
+     * @return The validated string
+     */
+    private String getStringInput() {
+        String userInput = "";
+
+        while (userInput.length() < 1) {
+            try {
+                userInput = keyboard.readLine();
+
+                if (userInput.length() < 1) {
+                    System.out.println("[INPUT ERROR] Please enter a string with a length greater than 1");
+                } else {
+                    break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return userInput;
     }
 
     /**

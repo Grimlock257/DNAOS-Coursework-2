@@ -10,6 +10,7 @@ package io.grimlock257.dnaos.loadbalancer.message;
 public enum MessageTypeOut {
     NEW_JOB,
     COMPLETE_JOB,
+    LOAD_BALANCER_SHUTDOWN,
     NODE_SHUTDOWN,
     NODE_SHUTDOWN_SPECIFIC_FAILURE,
     NODE_SHUTDOWN_SPECIFIC_SUCCESS,

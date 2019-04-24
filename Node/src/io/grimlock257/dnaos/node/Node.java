@@ -372,7 +372,7 @@ public class Node {
     }
 
     /**
-     * Get input from the user search as the command they want to issue, and any required arguments
+     * Ask the user to confirm if they want to shutdown the node
      */
     private void getUserInput() {
         String displayOptions = null;
